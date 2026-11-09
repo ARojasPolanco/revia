@@ -34,6 +34,10 @@ app.use(
     limit: 300,
     standardHeaders: true,
     legacyHeaders: false,
+    message: {
+      status: 'fail',
+      message: 'Demasiadas solicitudes. Probá más tarde.',
+    },
   })
 );
 

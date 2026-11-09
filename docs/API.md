@@ -313,3 +313,7 @@ Respuesta incluye `flagged_contact: true|false` y `warning`.
 | 429    | Exceso de ofertas diarias o rate limit.                          |
 | 409    | Reembolso mientras hay otro `PENDING`.                           |
 | 409    | Payout bloqueado por disputa abierta.                            |
+| 413    | El cuerpo de la solicitud supera el límite.                      |
+| 503    | Base de datos o servicio externo temporalmente no disponible.    |
+
+Los mensajes de validación se devuelven en español con el campo afectado (por ejemplo, `password debe tener al menos 10 caracteres`). Nunca se exponen detalles de PostgreSQL, Talo ni Didit.

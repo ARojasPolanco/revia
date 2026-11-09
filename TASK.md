@@ -158,6 +158,8 @@ Tablero vivo del proyecto. Se actualiza al empezar y al terminar cada tarea. Si 
 - [ ] Migrar avatares a R2 o Cloudinary para producción (el disco de Render es efímero).
 - [ ] Historial de compras/ventas y auditoría de la orden (Fase 6).
 - [ ] Comprobante de payout descargable (Fase 7).
+- [x] Errores: body-parser, CORS, Multer, Sequelize y PostgreSQL normalizados; mensajes Zod en español; rate limit global en español.
+- [x] Tests de errores: 404, JSON inválido, 422 con campos obligatorios/email/longitud y 401.
 
 ## Fase 3 — Categorías, publicaciones, fotos y moderación
 

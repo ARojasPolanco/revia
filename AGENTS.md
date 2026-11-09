@@ -136,7 +136,9 @@ Reglas:
 - `globalErrorHandler` distinto en desarrollo y producción.
 - `errorMatchers` traduce Sequelize, JWT, PostgreSQL, Zod y body-parser.
 - Errores 5xx/no operativos se persisten en `errors` con redacción.
-- Códigos: 422 validación, 400 entrada inválida, 401 sin/invalid token, 403 permisos/estado, 404 inexistente, 409 conflicto, 429 rate limit, 500 inesperado.
+- Códigos: 422 validación, 400 entrada inválida/JSON inválido, 401 sin/invalid token, 403 permisos/estado/CORS, 404 inexistente, 409 conflicto, 413 cuerpo demasiado grande, 429 rate limit, 500 inesperado, 503 servicio no disponible.
+- Los mensajes de Zod se traducen a español y se devuelven con el campo afectado.
+- Errores de body-parser, CORS, Multer, JWT, Sequelize y PostgreSQL se normalizan antes de responder.
 - Las violaciones de unicidad se mapean a 409 sin exponer PostgreSQL.
 - Los errores de webhook se registran sin romper la respuesta `200` de Talo/Didit.
 - Nunca exponer detalles de Talo o Didit en mensajes al usuario.
