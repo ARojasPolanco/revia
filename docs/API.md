@@ -59,14 +59,19 @@ Reglas:
 
 ## 4. KYC
 
-| Método | Ruta              | Auth            | Descripción                                                                       |
-| ------ | ----------------- | --------------- | --------------------------------------------------------------------------------- |
-| POST   | `/kyc/session`    | usuario         | Crea sesión de verificación (Didit). Devuelve URL/sesión.                         |
-| GET    | `/kyc/status`     | usuario         | Estado propio: `not_started`, `pending`, `approved`, `rejected`, `manual_review`. |
-| POST   | `/kyc/retry`      | usuario         | Reintenta tras rechazo.                                                           |
-| POST   | `/webhooks/didit` | público firmado | Notificación del proveedor.                                                       |
+| Método | Ruta              | Auth               | Descripción                                                                                   |
+| ------ | ----------------- | ------------------ | --------------------------------------------------------------------------------------------- |
+| POST   | `/kyc/session`    | usuario verificado | Crea sesión. Devuelve `mode: redirect` + URL, o `mode: mock` en desarrollo sin proveedor.     |
+| GET    | `/kyc/status`     | usuario            | Estado propio: `not_started`, `pending`, `approved`, `rejected`, `manual_review`, `expired`.  |
+| POST   | `/kyc/dev/verify` | usuario (solo dev) | Simula `approved`, `rejected` o `manual_review` para pruebas manuales.                        |
+| POST   | `/webhooks/didit` | público firmado    | Webhook con HMAC-SHA256 (`X-Signature-V2`, ventana de 5 minutos, idempotente por `event_id`). |
 
-La respuesta pública nunca menciona Didit.
+Reglas:
+
+- KYC es obligatorio para publicar y cobrar.
+- La respuesta pública nunca menciona al proveedor; la UI dice "Verificación de REVIA".
+- Sin `DIDIT_WORKFLOW_ID` en desarrollo, `POST /kyc/session` entra en modo mock y se puede aprobar con `/kyc/dev/verify`.
+- Los estados del proveedor se mapean a `approved`, `rejected`, `manual_review`, `pending` o `expired`.
 
 ## 5. Categorías y configuración
 
@@ -167,14 +172,14 @@ Estados: `pending_payment`, `paid`, `handover_pending`, `delivered`, `completed`
 
 ## 9. Payouts
 
-| Método | Ruta                             | Auth     | Descripción                 |
-| ------ | -------------------------------- | -------- | --------------------------- |
-| GET    | `/me/payout-account`             | vendedor | Datos enmascarados.         |
-| PUT    | `/me/payout-account`             | vendedor | CBU/CVU/alias + titular.    |
-| GET    | `/me/payouts`                    | vendedor | Historial y estado.         |
-| GET    | `/admin/payouts`                 | finance  | Cola de payouts.            |
-| POST   | `/admin/payouts/:id/mark-paid`   | finance  | Marca pagado + comprobante. |
-| POST   | `/admin/payouts/:id/mark-failed` | finance  | Marca fallido + motivo.     |
+| Método | Ruta                             | Auth         | Descripción                                             |
+| ------ | -------------------------------- | ------------ | ------------------------------------------------------- |
+| GET    | `/me/payout-account`             | usuario      | Datos enmascarados (últimos 4 o alias parcial).         |
+| PUT    | `/me/payout-account`             | vendedor KYC | CBU/CVU (22 dígitos) o alias + titular; se cifra en DB. |
+| GET    | `/me/payouts`                    | vendedor     | Historial y estado.                                     |
+| GET    | `/admin/payouts`                 | finance      | Cola de payouts.                                        |
+| POST   | `/admin/payouts/:id/mark-paid`   | finance      | Marca pagado + comprobante.                             |
+| POST   | `/admin/payouts/:id/mark-failed` | finance      | Marca fallido + motivo.                                 |
 
 Estados: `pending`, `processing`, `paid`, `failed`.
 

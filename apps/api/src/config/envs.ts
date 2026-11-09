@@ -48,6 +48,9 @@ const envSchema = z.object({
 
   DIDIT_API_KEY: z.string().optional(),
   DIDIT_WEBHOOK_SECRET: z.string().optional(),
+  DIDIT_API_URL: z.string().url().default('https://verification.didit.me'),
+  DIDIT_WORKFLOW_ID: z.string().optional(),
+  DIDIT_CALLBACK_URL: z.string().url().optional(),
 
   VAPID_PUBLIC_KEY: z.string().optional(),
   VAPID_PRIVATE_KEY: z.string().optional(),

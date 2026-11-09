@@ -243,3 +243,19 @@ Formato: `D-XXX · fecha · estado`. Estados: `aceptada`, `revisar`, `reemplazad
 - Contexto: en local/test no hay proveedor de email configurado.
 - Decisión: cuando `NODE_ENV !== production`, `register`, `resend-verification` y `forgot-password` devuelven `devVerificationToken`/`devResetToken`. Si falta `RESEND_API_KEY`, el link se loguea en consola. En producción nunca se exponen tokens en respuestas.
 - Consecuencias: permite smoke manual completo; exige no filtrar los tokens en producción.
+
+## D-031 · 2026-11-09 · aceptada
+
+**KYC con Didit + modo mock de desarrollo.**
+
+- Contexto: Didit requiere `workflow_id` y cuenta configurada; el MVP necesita validar identidad y permitir pruebas locales sin credenciales.
+- Decisión: `POST /v3/session/` con `vendor_data = user_id`, callback a `/verificacion` y webhook HMAC-SHA256 (`X-Signature-V2`, ventana de 5 minutos). Sin `DIDIT_WORKFLOW_ID` y fuera de producción, el flujo entra en modo mock y se aprueba/rechaza con `/kyc/dev/verify`.
+- Consecuencias: integración real lista para producción sin bloquear el desarrollo; el modo mock está prohibido en producción.
+
+## D-032 · 2026-11-09 · aceptada
+
+**Datos de payout cifrados con AES-256-GCM.**
+
+- Contexto: CBU/CVU/alias son datos sensibles y no deben quedar en texto plano.
+- Decisión: cifrado a nivel aplicación con `PAYOUT_ENCRYPTION_KEY` de 32 bytes (hex o base64). En desarrollo, si falta la clave, se deriva de `JWT_SECRET`; en producción es obligatoria. La API solo devuelve datos enmascarados.
+- Consecuencias: mayor seguridad y cumplimiento; rotar la clave requiere migración de datos cifrados.

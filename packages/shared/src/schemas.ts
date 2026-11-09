@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { DELIVERY_MODES, LISTING_CONDITIONS, USER_ROLES } from './enums.js';
+import { DELIVERY_MODES, LISTING_CONDITIONS, PAYOUT_METHODS, USER_ROLES } from './enums.js';
 
 export const uuidSchema = z.string().uuid();
 
@@ -72,6 +72,14 @@ export const updateProfileSchema = z
     bio: z.string().trim().max(500).optional(),
     location: z.string().trim().max(120).optional(),
     avatarUrl: z.string().url().max(500).optional(),
+  })
+  .strict();
+
+export const payoutAccountSchema = z
+  .object({
+    method: z.enum(PAYOUT_METHODS),
+    account: z.string().trim().min(1).max(100),
+    holderName: z.string().trim().min(3).max(120),
   })
   .strict();
 

@@ -4,11 +4,11 @@ Tablero vivo del proyecto. Se actualiza al empezar y al terminar cada tarea. Si 
 
 ## Estado actual
 
-- **Fase:** Fase 1 completada en local (auth, verificación de email, Google OAuth y cuenta base).
-- **Repo:** `REVIA-fullstack`, rama `dev`, con Fase 0 en `main` y `dev`.
+- **Fase:** Fase 2 completada en local (KYC con Didit/mock y cuenta de payout cifrada).
+- **Repo:** `REVIA-fullstack`, rama `dev`, con Fase 0 en `main` y Fases 1-2 en `dev`.
 - **Alcance:** MVP C2C local en Bahía Blanca, ARS, Tasa de REVIA 7% + $500, custodia y payouts manuales.
 - **Documentos creados:** `AGENTS.md`, `TASK.md`, `docs/SPEC.md`, `docs/ARCHITECTURE.md`, `docs/API.md`, `docs/DECISIONS.md`, `README.md`.
-- **Decisiones abiertas:** ninguna. D-026 a D-030 cerradas.
+- **Decisiones abiertas:** ninguna. D-026 a D-032 cerradas.
 - **Riesgo principal:** operación manual de payouts y dependencia de Talo (solo transferencia).
 - **Última actualización:** 2026-11-09.
 
@@ -119,18 +119,32 @@ Tablero vivo del proyecto. Se actualiza al empezar y al terminar cada tarea. Si 
 
 **Objetivo:** verificar identidad del vendedor y capturar datos de cobro.
 
-- [ ] Modelo `KycVerification` y migración.
-- [ ] Integración con Didit: crear sesión, webhook, estados y reintento.
-- [ ] Fallback de revisión manual.
-- [ ] Modelo `PayoutAccount` con CBU/CVU/alias y titular.
-- [ ] Cifrado AES-256-GCM de datos de payout.
-- [ ] Validación de formato y coincidencia de titular con KYC.
-- [ ] Endpoints `/kyc/*` y `/me/payout-account`.
-- [ ] UI de verificación ("Verificación de REVIA") y estado.
-- [ ] UI de datos de cobro enmascarados.
-- [ ] Tests de KYC (mock Didit), validación y cifrado.
+- [x] Modelo `KycVerification` y migración (`003_kyc_payout`).
+- [x] Integración con Didit: crear sesión, webhook HMAC-SHA256, estados y reintento.
+- [x] Fallback de revisión manual (estado `manual_review`; resolución admin en Fase 10).
+- [x] Modelo `PayoutAccount` con CBU/CVU/alias y titular.
+- [x] Cifrado AES-256-GCM de datos de payout.
+- [x] Validación de formato y coincidencia de titular con KYC.
+- [x] Endpoints `/kyc/*` y `/me/payout-account`.
+- [x] UI de verificación ("Verificación de REVIA") y estado.
+- [x] UI de datos de cobro enmascarados.
+- [x] Tests de KYC (mock Didit), validación y cifrado.
 
 **DoD:** vendedor verificado puede publicar; payout account válida; Talo/Didit invisibles.
+
+## Avance Fase 2 (2026-11-09)
+
+- Migración `003_kyc_payout`: `kyc_verifications` y `payout_accounts`.
+- Didit: `POST /v3/session/` con `vendor_data = user_id`, callback a `/verificacion`, idioma `es` y webhook HMAC-SHA256 (`X-Signature-V2`, ventana de 5 minutos, idempotencia por `event_id`).
+- Mapeo de estados de Didit a `pending`, `approved`, `rejected`, `manual_review` y `expired`.
+- Modo mock en desarrollo cuando falta `DIDIT_WORKFLOW_ID`: `POST /kyc/session` + `POST /kyc/dev/verify`.
+- Payout account con CBU/CVU (22 dígitos) o alias, titular, cifrado AES-256-GCM y enmascarado en respuestas.
+- Coincidencia de titular contra el nombre verificado; si no coincide, `pending_review`.
+- Web: `/verificacion` (iniciar, estado y simulación dev) y sección de cobros en `/configuracion`.
+- Mail service porteado desde Duo LAS y adaptado a REVIA (light/sobrio): verificación, reset, suspensión y KYC aprobado/rechazado/en revisión.
+- Tests: 33 en total; `lint`, `build` y migración `003` down/up en `revia` y `revia_test` verdes.
+- Smoke real: payout bloqueado sin KYC (403) → sesión mock → aprobación → payout `active` con cuenta enmascarada; `/auth/me` refleja `kycStatus=approved`.
+- Nota: la integración real de Didit requiere `DIDIT_API_KEY` y `DIDIT_WORKFLOW_ID`; sin ellos, solo mock local.
 
 ## Fase 3 — Categorías, publicaciones, fotos y moderación
 

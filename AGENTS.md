@@ -215,6 +215,8 @@ Reglas:
 - Los fondos entran a la cuenta de REVIA (Talo) y no salen hasta `completed`.
 - El payout se bloquea con disputa abierta, reembolso pendiente o datos inválidos.
 - Los payouts son manuales en el MVP y los ejecuta un rol `finance`.
+- El titular de la cuenta de cobro debe coincidir con la identidad verificada; si no coincide, queda `pending_review` y no se paga.
+- Los datos de payout se guardan cifrados con AES-256-GCM y la API solo devuelve versiones enmascaradas.
 - Toda operación de dinero deja evento y auditoría.
 - No se expone Talo al usuario.
 
@@ -240,8 +242,10 @@ Reglas:
 ### KYC
 
 - Obligatorio para publicar y cobrar.
-- La UI dice "Verificación de REVIA".
-- No se guardan biometrías crudas.
+- La UI dice "Verificación de REVIA"; el proveedor nunca se menciona.
+- No se guardan biometrías crudas; solo estado, referencia de sesión y motivo.
+- El webhook del proveedor se verifica con HMAC-SHA256 y ventana de 5 minutos.
+- Sin `DIDIT_WORKFLOW_ID` y fuera de producción, el flujo usa modo mock para pruebas; en producción es obligatorio configurarlo.
 
 ## 14. Frontend: reglas críticas
 

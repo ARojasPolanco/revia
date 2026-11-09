@@ -68,8 +68,15 @@ export const KYC_STATUSES = [
   'approved',
   'rejected',
   'manual_review',
+  'expired',
 ] as const;
 export type KycStatus = (typeof KYC_STATUSES)[number];
+
+export const PAYOUT_METHODS = ['cbu', 'cvu', 'alias'] as const;
+export type PayoutMethod = (typeof PAYOUT_METHODS)[number];
+
+export const PAYOUT_ACCOUNT_STATUSES = ['active', 'pending_review'] as const;
+export type PayoutAccountStatus = (typeof PAYOUT_ACCOUNT_STATUSES)[number];
 
 export const NOTIFICATION_TYPES = [
   'listing_approved',
