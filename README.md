@@ -131,6 +131,8 @@ Después de `npm run migrate`, ejecutá `npm run seed:dev`. Contraseña para tod
 | `vendedor@revia.test`  | KYC aprobado y perfil verificado simulado: publicar, gestionar fotos y cobrar. |
 | `admin@revia.test`     | Moderación en `/admin/publicaciones`.                                          |
 
+`seed:dev` también crea **3 publicaciones demo activas** con las imágenes de `apps/web/public` (`/1.jpeg`, `/2.jpeg`, `/3.jpg`) para probar catálogo, detalle, feed y favoritos con fotos reales.
+
 Los avatares se guardan localmente en `apps/api/uploads/avatars` durante el desarrollo. En producción se migrarán a R2 o Cloudinary.
 
 ## Variables de entorno (referencia)
