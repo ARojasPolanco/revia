@@ -1,4 +1,5 @@
 import request from 'supertest';
+import sharp from 'sharp';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { app } from '../app.js';
 import { sequelize } from '../config/database.js';
@@ -116,5 +117,35 @@ describe('KYC y payout', () => {
     });
 
     expect(payout.status).toBe(422);
+  });
+
+  it('sube y procesa una foto de perfil', async () => {
+    const { agent } = await registerVerifyAndLogin();
+    const image = await sharp({
+      create: {
+        width: 32,
+        height: 32,
+        channels: 3,
+        background: { r: 15, g: 118, b: 110 },
+      },
+    })
+      .png()
+      .toBuffer();
+
+    const response = await agent.post('/api/v1/me/avatar').attach('avatar', image, 'avatar.png');
+
+    expect(response.status).toBe(200);
+    expect(response.body.user.avatarUrl).toContain('/uploads/avatars/');
+    expect(response.body.user.sellerVerified).toBe(false);
+  });
+
+  it('rechaza archivos que no son imagen', async () => {
+    const { agent } = await registerVerifyAndLogin();
+
+    const response = await agent
+      .post('/api/v1/me/avatar')
+      .attach('avatar', Buffer.from('no es una imagen'), 'archivo.txt');
+
+    expect(response.status).toBe(422);
   });
 });

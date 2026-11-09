@@ -25,6 +25,7 @@ export class User extends Model<InferAttributes<User>, InferCreationAttributes<U
   declare avatarUrl: CreationOptional<string | null>;
   declare passwordChangedAt: CreationOptional<Date | null>;
   declare lastLoginAt: CreationOptional<Date | null>;
+  declare sellerVerifiedAt: CreationOptional<Date | null>;
   declare isDeleted: CreationOptional<boolean>;
   declare createdAt: CreationOptional<Date>;
   declare updatedAt: CreationOptional<Date>;
@@ -105,6 +106,10 @@ User.init(
       allowNull: true,
     },
     lastLoginAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
+    sellerVerifiedAt: {
       type: DataTypes.DATE,
       allowNull: true,
     },

@@ -46,6 +46,7 @@ export interface SelfUser {
   emailVerified: boolean;
   kycStatus: string;
   onboardingCompleted: boolean;
+  sellerVerified: boolean;
   createdAt: Date;
 }
 
@@ -55,6 +56,7 @@ export interface PublicUser {
   bio: string | null;
   location: string | null;
   avatarUrl: string | null;
+  sellerVerified: boolean;
   createdAt: Date;
 }
 
@@ -90,6 +92,7 @@ export function toSelfUser(user: User): SelfUser {
     emailVerified: user.emailVerified,
     kycStatus: user.kycStatus,
     onboardingCompleted: user.onboardingCompleted,
+    sellerVerified: Boolean(user.sellerVerifiedAt),
     createdAt: user.createdAt,
   };
 }
@@ -101,6 +104,7 @@ export function toPublicUser(user: User): PublicUser {
     bio: user.bio,
     location: user.location,
     avatarUrl: user.avatarUrl,
+    sellerVerified: Boolean(user.sellerVerifiedAt),
     createdAt: user.createdAt,
   };
 }

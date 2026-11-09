@@ -1,11 +1,13 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import type { FormEvent } from 'react';
+import type { ChangeEvent, FormEvent } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/components/AuthProvider';
+import { useAuth, type SessionUser } from '@/components/AuthProvider';
+import { InfoTooltip } from '@/components/InfoTooltip';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
+import { VerifiedBadge } from '@/components/VerifiedBadge';
 import { ApiError, apiFetch } from '@/lib/api';
 
 const inputClass =
@@ -14,11 +16,8 @@ const labelClass = 'text-sm font-medium text-neutral-700';
 const buttonClass =
   'w-full rounded-xl bg-teal-700 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-60';
 
-type PayoutMethod = 'cbu' | 'cvu' | 'alias';
-
 interface PayoutView {
   configured: boolean;
-  method?: string;
   accountMasked?: string;
   holderName?: string;
   holderMatchesKyc?: boolean;
@@ -41,14 +40,15 @@ function SettingsContent() {
   const [fullName, setFullName] = useState('');
   const [bio, setBio] = useState('');
   const [location, setLocation] = useState('');
-  const [avatarUrl, setAvatarUrl] = useState('');
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [resending, setResending] = useState(false);
   const [verificationToken, setVerificationToken] = useState<string | null>(null);
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const [avatarError, setAvatarError] = useState<string | null>(null);
+  const [avatarMessage, setAvatarMessage] = useState<string | null>(null);
 
-  const [payoutMethod, setPayoutMethod] = useState<PayoutMethod>('cbu');
   const [payoutAccount, setPayoutAccount] = useState('');
   const [payoutHolder, setPayoutHolder] = useState('');
   const [payoutView, setPayoutView] = useState<PayoutView | null>(null);
@@ -75,6 +75,49 @@ function SettingsContent() {
       .catch(() => setPayoutView(null));
   }, [user]);
 
+  async function handleAvatarChange(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+
+    if (!file) {
+      return;
+    }
+
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+      setAvatarError('Formato no válido. Usá JPG, PNG o WebP.');
+      event.target.value = '';
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      setAvatarError('La imagen supera el límite de 5 MB.');
+      event.target.value = '';
+      return;
+    }
+
+    setAvatarUploading(true);
+    setAvatarError(null);
+    setAvatarMessage(null);
+
+    try {
+      const formData = new FormData();
+      formData.append('avatar', file);
+
+      await apiFetch<{ user: SessionUser }>('/me/avatar', {
+        method: 'POST',
+        body: formData,
+      });
+      await refresh();
+      setAvatarMessage('Foto de perfil actualizada.');
+    } catch (caught) {
+      setAvatarError(
+        caught instanceof ApiError ? caught.message : 'No se pudo subir la foto de perfil'
+      );
+    } finally {
+      setAvatarUploading(false);
+      event.target.value = '';
+    }
+  }
+
   async function handleSave(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setLoading(true);
@@ -84,12 +127,7 @@ function SettingsContent() {
     try {
       await apiFetch('/auth/me', {
         method: 'PATCH',
-        body: JSON.stringify({
-          fullName,
-          bio,
-          location,
-          ...(avatarUrl ? { avatarUrl } : {}),
-        }),
+        body: JSON.stringify({ fullName, bio, location }),
       });
       await refresh();
       setMessage('Perfil actualizado.');
@@ -127,7 +165,7 @@ function SettingsContent() {
       const data = await apiFetch<{ payoutAccount: PayoutView }>('/me/payout-account', {
         method: 'PUT',
         body: JSON.stringify({
-          method: payoutMethod,
+          method: 'cbu',
           account: payoutAccount,
           holderName: payoutHolder,
         }),
@@ -154,8 +192,6 @@ function SettingsContent() {
   }
 
   const kycApproved = user?.kycStatus === 'approved';
-  const accountPlaceholder =
-    payoutMethod === 'alias' ? 'mi.alias.revia' : '22 dígitos del CBU o CVU';
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-2xl flex-col gap-6 px-5 py-12">
@@ -169,6 +205,45 @@ function SettingsContent() {
           Cerrar sesión
         </button>
       </header>
+
+      <section className="flex items-center gap-4 rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
+        {user?.avatarUrl ? (
+          <img
+            src={user.avatarUrl}
+            alt="Foto de perfil"
+            className="h-20 w-20 rounded-full border border-neutral-200 object-cover"
+          />
+        ) : (
+          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-neutral-100 text-xl font-bold text-neutral-500">
+            {user?.fullName?.charAt(0).toUpperCase() ?? '?'}
+          </div>
+        )}
+
+        <div className="flex flex-col gap-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="text-lg font-bold text-neutral-900">{user?.fullName}</p>
+            {user?.sellerVerified ? <VerifiedBadge /> : null}
+          </div>
+          <p className="text-sm text-neutral-500">{user?.email}</p>
+          <label
+            className="mt-1 w-fit cursor-pointer text-sm font-semibold text-teal-700"
+            htmlFor="avatar-input"
+          >
+            {avatarUploading ? 'Subiendo…' : 'Cambiar foto'}
+          </label>
+          <input
+            id="avatar-input"
+            className="hidden"
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            capture="user"
+            onChange={handleAvatarChange}
+            disabled={avatarUploading}
+          />
+          {avatarError ? <p className="text-xs text-red-600">{avatarError}</p> : null}
+          {avatarMessage ? <p className="text-xs text-teal-700">{avatarMessage}</p> : null}
+        </div>
+      </section>
 
       <section className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
         <h2 className="text-sm font-bold text-neutral-900">Estado de la cuenta</h2>
@@ -189,10 +264,6 @@ function SettingsContent() {
                 Gestionar
               </Link>
             </dd>
-          </div>
-          <div>
-            <dt className="text-xs uppercase tracking-wide text-neutral-400">Rol</dt>
-            <dd>{user?.role}</dd>
           </div>
         </dl>
 
@@ -234,8 +305,7 @@ function SettingsContent() {
         {payoutView?.configured ? (
           <div className="mt-3 rounded-xl border border-neutral-200 bg-neutral-50 p-3 text-sm text-neutral-700">
             <p>
-              Cuenta actual: <strong>{payoutView.method?.toUpperCase()}</strong>{' '}
-              {payoutView.accountMasked}
+              Cuenta actual: <strong>{payoutView.accountMasked}</strong>
             </p>
             <p>Titular: {payoutView.holderName}</p>
             <p>
@@ -246,26 +316,17 @@ function SettingsContent() {
 
         <form className="mt-4 flex flex-col gap-4" onSubmit={handleSavePayout}>
           <label className="flex flex-col">
-            <span className={labelClass}>Método</span>
-            <select
-              className={inputClass}
-              value={payoutMethod}
-              onChange={(event) => setPayoutMethod(event.target.value as PayoutMethod)}
-              disabled={!kycApproved}
-            >
-              <option value="cbu">CBU</option>
-              <option value="cvu">CVU</option>
-              <option value="alias">Alias</option>
-            </select>
-          </label>
-
-          <label className="flex flex-col">
-            <span className={labelClass}>Cuenta</span>
+            <span className={labelClass}>
+              CBU o CVU
+              <InfoTooltip text="Podés ingresar un CBU bancario o un CVU de billetera virtual (por ejemplo, Mercado Pago). Siempre son 22 dígitos." />
+            </span>
             <input
               className={inputClass}
               value={payoutAccount}
               onChange={(event) => setPayoutAccount(event.target.value)}
-              placeholder={accountPlaceholder}
+              placeholder="22 dígitos del CBU o CVU"
+              inputMode="numeric"
+              maxLength={22}
               required
               disabled={!kycApproved}
             />
@@ -337,16 +398,6 @@ function SettingsContent() {
               onChange={(event) => setLocation(event.target.value)}
               maxLength={120}
               placeholder="Bahía Blanca"
-            />
-          </label>
-
-          <label className="flex flex-col">
-            <span className={labelClass}>Foto de perfil (URL)</span>
-            <input
-              className={inputClass}
-              value={avatarUrl}
-              onChange={(event) => setAvatarUrl(event.target.value)}
-              placeholder="https://…"
             />
           </label>
 

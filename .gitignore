@@ -15,6 +15,9 @@ coverage/
 .env.*
 !.env.example
 
+# Uploads locales (avatares en desarrollo)
+uploads/
+
 # Logs
 *.log
 npm-debug.log*

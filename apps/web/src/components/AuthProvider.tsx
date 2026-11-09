@@ -12,6 +12,8 @@ export interface SessionUser {
   emailVerified: boolean;
   kycStatus: string;
   onboardingCompleted: boolean;
+  avatarUrl: string | null;
+  sellerVerified: boolean;
 }
 
 interface AuthContextValue {

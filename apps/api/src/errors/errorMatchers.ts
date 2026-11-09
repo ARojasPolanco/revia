@@ -33,6 +33,16 @@ export function matchError(error: unknown): AppError | null {
 
   const errorName = error instanceof Error ? error.name : '';
 
+  if (errorName === 'MulterError') {
+    const code = (error as { code?: string }).code;
+
+    if (code === 'LIMIT_FILE_SIZE') {
+      return new AppError('La imagen supera el límite de 5 MB', 422);
+    }
+
+    return new AppError('No se pudo subir la imagen', 422);
+  }
+
   if (errorName === 'TokenExpiredError') {
     return new AppError('La sesión expiró', 401);
   }

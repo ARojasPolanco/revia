@@ -4,15 +4,21 @@ import express from 'express';
 import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
 import { corsOrigins, envs } from './config/envs.js';
+import { ensureUploadsDir, uploadsDir } from './config/uploads.js';
 import { globalErrorHandler, notFoundHandler } from './errors/errorController.js';
 import { verifyOrigin } from './middlewares/verifyOrigin.js';
 import { apiRouter } from './routes/index.js';
 
 export const app = express();
 
+ensureUploadsDir();
 app.set('trust proxy', 1);
 app.disable('x-powered-by');
-app.use(helmet());
+app.use(
+  helmet({
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+  })
+);
 app.use(express.json({ limit: '1mb' }));
 app.use(cookieParser());
 app.use(
@@ -40,6 +46,7 @@ app.get('/health', (_req, res) => {
   });
 });
 
+app.use('/uploads', express.static(uploadsDir, { maxAge: '7d', immutable: true }));
 app.use('/api/v1', apiRouter);
 
 app.all('*', notFoundHandler);

@@ -193,6 +193,8 @@ Vendedor → POST /kyc/session → Didit crea sesión
 5. Se guarda la URL pública/CDN y el orden en `listing_photos`.
 6. Al eliminar una publicación se hace soft delete y se limpian assets por job.
 
+**Avatares:** en desarrollo se procesan con `sharp` (512×512, WebP) y se guardan en `apps/api/uploads/avatars`, servidos desde `/uploads`. En producción se migrará a R2 o Cloudinary; el disco de Render es efímero y no debe usarse para almacenamiento permanente.
+
 ## 8. Tiempo real y notificaciones
 
 - **Chat:** polling cada 3–5 s con `GET /conversations/:id/messages?after=...`. Sin WebSocket ni SSE en el MVP.
@@ -322,6 +324,7 @@ Reglas:
 | Fraude con cuentas nuevas o suplantación.                                    | KYC, email verificado, aprobación previa, filtros y límites.                     |
 | Render free duerme y corta webhooks/cron.                                    | Plan pago o keep-alive; monitoreo de latencia.                                   |
 | Polling de chat genera carga.                                                | Intervalos de 3–5 s, paginación y límites; migrar a SSE/WebSocket si crece.      |
+| Avatares en disco efímero.                                                   | Solo para desarrollo; producción con R2/Cloudinary y assets persistentes.        |
 | Reembolsos después del payout.                                               | Congelar payout con disputa; recuperación manual y escalamiento.                 |
 | Didit free limitado a 500/mes.                                               | Monitoreo de cuota; RENAPER pago o revisión manual como fallback.                |
 

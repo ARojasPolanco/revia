@@ -286,7 +286,9 @@ Reglas del cupón:
 - **Seguir vendedores.**
 - **Feed de inicio:** recomendados + novedades de vendedores seguidos.
 - **Búsqueda:** texto libre (PostgreSQL full-text / `pg_trgm`), filtros por categoría, precio, estado, modalidad de entrega y orden por recientes/menor precio/mayor precio.
-- **Perfil público:** foto, nombre, bio, ubicación, reputación, publicaciones y seguidores.
+- **Perfil público:** foto circular, nombre, bio, ubicación, reputación, publicaciones y seguidores.
+- **Perfil verificado:** check visible cuando el vendedor completa su primera venta.
+- **Historial del usuario:** compras y ventas con estado, timeline de la orden, comprobantes de payout y acceso a la disputa.
 - **Perfil privado:** datos de cuenta, KYC, dirección de payout y notificaciones.
 
 ## 14. Chat y notificaciones

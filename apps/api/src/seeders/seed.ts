@@ -14,6 +14,7 @@ interface DemoUser {
   kycStatus?: string;
   birthDate?: string | null;
   acceptedTerms?: boolean;
+  sellerVerifiedAt?: Date | null;
 }
 
 const demoUsers: DemoUser[] = [
@@ -34,6 +35,7 @@ const demoUsers: DemoUser[] = [
     email: 'vendedor@revia.test',
     fullName: 'Vendedor Demo',
     kycStatus: 'approved',
+    sellerVerifiedAt: new Date(),
   },
   {
     email: 'admin@revia.test',
@@ -58,6 +60,7 @@ async function upsertDemoUser(input: DemoUser): Promise<void> {
     acceptedTermsAt: input.acceptedTerms === false ? null : new Date(),
     onboardingCompleted: input.onboardingCompleted ?? true,
     kycStatus: input.kycStatus ?? 'not_started',
+    sellerVerifiedAt: input.sellerVerifiedAt ?? null,
     isDeleted: false,
   };
 

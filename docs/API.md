@@ -42,20 +42,22 @@ Reglas:
 - 18+ obligatorio.
 - Rate limit estricto en register/login/forgot.
 - Las cuentas nuevas con Google quedan con `onboardingCompleted=false` hasta completar fecha de nacimiento y términos.
+- El usuario de `/auth/me` incluye `avatarUrl` y `sellerVerified` (check de perfil verificado tras la primera venta).
 - En desarrollo/test, `register`, `resend-verification` y `forgot-password` devuelven `devVerificationToken`/`devResetToken` y los links se loguean si no hay `RESEND_API_KEY`.
 
 ## 3. Usuarios y social
 
-| Método | Ruta                  | Auth    | Descripción                           |
-| ------ | --------------------- | ------- | ------------------------------------- |
-| GET    | `/users/:id`          | público | Perfil público (sin datos sensibles). |
-| GET    | `/users/:id/listings` | público | Publicaciones activas del vendedor.   |
-| GET    | `/users/:id/reviews`  | público | Reseñas recibidas + promedio.         |
-| POST   | `/users/:id/follow`   | usuario | Seguir. Idempotente.                  |
-| DELETE | `/users/:id/follow`   | usuario | Dejar de seguir.                      |
-| GET    | `/me/following`       | usuario | A quién sigo.                         |
-| GET    | `/me/followers`       | usuario | Quiénes me siguen.                    |
-| POST   | `/users/:id/report`   | usuario | Denunciar usuario.                    |
+| Método | Ruta                  | Auth    | Descripción                                                      |
+| ------ | --------------------- | ------- | ---------------------------------------------------------------- |
+| GET    | `/users/:id`          | público | Perfil público (sin datos sensibles).                            |
+| GET    | `/users/:id/listings` | público | Publicaciones activas del vendedor.                              |
+| GET    | `/users/:id/reviews`  | público | Reseñas recibidas + promedio.                                    |
+| POST   | `/me/avatar`          | usuario | Multipart `avatar` (JPG/PNG/WebP ≤5 MB); recorte 512x512 y WebP. |
+| POST   | `/users/:id/follow`   | usuario | Seguir. Idempotente.                                             |
+| DELETE | `/users/:id/follow`   | usuario | Dejar de seguir.                                                 |
+| GET    | `/me/following`       | usuario | A quién sigo.                                                    |
+| GET    | `/me/followers`       | usuario | Quiénes me siguen.                                               |
+| POST   | `/users/:id/report`   | usuario | Denunciar usuario.                                               |
 
 ## 4. KYC
 

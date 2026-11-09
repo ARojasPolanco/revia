@@ -147,6 +147,18 @@ Tablero vivo del proyecto. Se actualiza al empezar y al terminar cada tarea. Si 
 - Nota: la integración real de Didit requiere `DIDIT_API_KEY` y `DIDIT_WORKFLOW_ID`; sin ellos, solo mock local.
 - Seed `npm run seed:dev`: usuarios `demo@revia.test`, `pendiente@revia.test`, `vendedor@revia.test` y `admin@revia.test` (contraseña `revia12345`) para probar `/configuracion`, `/verificacion` y `/completar-perfil` sin depender de Google.
 
+## Ajustes post-Fase 2 (2026-11-09)
+
+- [x] Ocultar el rol en `/configuracion` (sigue en la API para permisos y admin).
+- [x] Payout: la UI pide **CBU o CVU** (22 dígitos) con tooltip; se quitó el selector de método y el alias visible.
+- [x] Foto de perfil desde el dispositivo (`input[type=file]` + `capture="user"`), preview circular y recorte 512×512 WebP.
+- [x] Almacenamiento local de avatares en desarrollo (`apps/api/uploads/avatars`) servido desde `/uploads`.
+- [x] Campo `seller_verified_at` y badge "Perfil verificado"; el seed `vendedor@revia.test` lo muestra para pruebas.
+- [ ] Disparar `seller_verified_at` en la primera orden `completed` (Fase 6).
+- [ ] Migrar avatares a R2 o Cloudinary para producción (el disco de Render es efímero).
+- [ ] Historial de compras/ventas y auditoría de la orden (Fase 6).
+- [ ] Comprobante de payout descargable (Fase 7).
+
 ## Fase 3 — Categorías, publicaciones, fotos y moderación
 
 **Objetivo:** publicar artículos con fotos y aprobación previa.
@@ -210,9 +222,13 @@ Tablero vivo del proyecto. Se actualiza al empezar y al terminar cada tarea. Si 
 - [ ] Ventana de 48 h y job de auto-completado.
 - [ ] Jobs de expiración de ofertas y pagos.
 - [ ] UI de checkout, pago, orden y entrega.
-- [ ] Tests de Talo mock, webhook, montos y estados.
+- [ ] Historial de compras del comprador (`/compras`) con estado y acciones.
+- [ ] Historial de ventas del vendedor (`/ventas`) con estado, comprador, monto y payout.
+- [ ] Timeline de la orden visible para comprador y vendedor (auditoría de la operación).
+- [ ] Setear `seller_verified_at` al completar la primera venta y mostrar el check de perfil verificado.
+- [ ] Tests de Talo mock, webhook, montos, estados e historiales.
 
-**DoD:** compra pagada por transferencia, entrega validada y orden completada a las 48 h.
+**DoD:** compra pagada por transferencia, entrega validada, orden completada a las 48 h y paneles de compras/ventas con auditoría.
 
 ## Fase 7 — Payouts manuales, finanzas y conciliación
 
@@ -223,7 +239,8 @@ Tablero vivo del proyecto. Se actualiza al empezar y al terminar cada tarea. Si 
 - [ ] Bloqueo por disputa, reembolso pendiente o datos inválidos.
 - [ ] Marcar `processing`, `paid` y `failed` con comprobante.
 - [ ] Auditoría de acciones de finanzas.
-- [ ] Panel de payout del vendedor.
+- [ ] Panel de payout del vendedor con comprobante descargable.
+- [ ] Resumen de ingresos y auditoría de ventas/payouts para el vendedor y para finanzas.
 - [ ] Conteo de SLA 48–72 h hábiles.
 - [ ] Conciliación diaria Talo vs órdenes.
 - [ ] Tests de payout, bloqueos y auditoría.

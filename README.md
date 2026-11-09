@@ -118,12 +118,14 @@ Los scripts definitivos se ajustan en la Fase 0.
 
 Después de `npm run migrate`, ejecutá `npm run seed:dev`. Contraseña para todos: `revia12345`.
 
-| Email                  | Qué permite probar                                                      |
-| ---------------------- | ----------------------------------------------------------------------- |
-| `demo@revia.test`      | Cuenta verificada sin KYC: `/configuracion` y flujo de `/verificacion`. |
-| `pendiente@revia.test` | Onboarding pendiente: `/completar-perfil`.                              |
-| `vendedor@revia.test`  | KYC aprobado: guardar datos de cobro en `/configuracion`.               |
-| `admin@revia.test`     | Rol admin (panel admin en Fase 10).                                     |
+| Email                  | Qué permite probar                                                       |
+| ---------------------- | ------------------------------------------------------------------------ |
+| `demo@revia.test`      | Cuenta verificada sin KYC: `/configuracion` y flujo de `/verificacion`.  |
+| `pendiente@revia.test` | Onboarding pendiente: `/completar-perfil`.                               |
+| `vendedor@revia.test`  | KYC aprobado y perfil verificado simulado: guardar cobro y ver el check. |
+| `admin@revia.test`     | Rol admin (panel admin en Fase 10).                                      |
+
+Los avatares se guardan localmente en `apps/api/uploads/avatars` durante el desarrollo. En producción se migrarán a R2 o Cloudinary.
 
 ## Variables de entorno (referencia)
 
