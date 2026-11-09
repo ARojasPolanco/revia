@@ -32,8 +32,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const data = await apiFetch<{ user: SessionUser }>('/auth/me');
       setUser(data.user);
     } catch (error) {
-      if (!(error instanceof ApiError) || error.status !== 401) {
-        console.error('No se pudo recuperar la sesión', error);
+      if (error instanceof ApiError && error.status >= 500) {
+        console.warn('No se pudo recuperar la sesión', error.message);
       }
       setUser(null);
     } finally {
@@ -48,6 +48,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = useCallback(async () => {
     try {
       await apiFetch('/auth/logout', { method: 'POST' });
+    } catch {
+      // La sesión local se cierra igual aunque la API no responda.
     } finally {
       setUser(null);
     }
