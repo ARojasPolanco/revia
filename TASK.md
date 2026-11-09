@@ -4,11 +4,11 @@ Tablero vivo del proyecto. Se actualiza al empezar y al terminar cada tarea. Si 
 
 ## Estado actual
 
-- **Fase:** Fase 0 completada en local (scaffold, Docker, API base, web base y migración 001).
-- **Repo:** `REVIA-fullstack`, rama `dev`, historia limpia, sin commits todavía.
+- **Fase:** Fase 1 completada en local (auth, verificación de email, Google OAuth y cuenta base).
+- **Repo:** `REVIA-fullstack`, rama `dev`, con Fase 0 en `main` y `dev`.
 - **Alcance:** MVP C2C local en Bahía Blanca, ARS, Tasa de REVIA 7% + $500, custodia y payouts manuales.
 - **Documentos creados:** `AGENTS.md`, `TASK.md`, `docs/SPEC.md`, `docs/ARCHITECTURE.md`, `docs/API.md`, `docs/DECISIONS.md`, `README.md`.
-- **Decisiones abiertas:** ninguna. D-026, D-027 y D-028 cerradas.
+- **Decisiones abiertas:** ninguna. D-026 a D-030 cerradas.
 - **Riesgo principal:** operación manual de payouts y dependencia de Talo (solo transferencia).
 - **Última actualización:** 2026-11-09.
 
@@ -84,21 +84,36 @@ Tablero vivo del proyecto. Se actualiza al empezar y al terminar cada tarea. Si 
 
 **Objetivo:** registro, verificación de email, login, Google, recuperación y cuenta base.
 
-- [ ] Modelos `User`, `AuthIdentity`, `EmailVerificationToken`, `PasswordResetToken`.
-- [ ] Migración de auth.
-- [ ] Registro con fecha de nacimiento, 18+, términos y hCaptcha opcional.
-- [ ] Login email + password con bcrypt 12 y JWT 1 día.
-- [ ] Google OAuth 2.0 server-side y vinculación de cuentas.
-- [ ] Verificación de email (24 h, SHA-256, un uso) y reenvío.
-- [ ] Forgot/reset (1 h, un uso, respuesta genérica).
-- [ ] `protect`, `restrictTo`, `requireVerifiedEmail`, `requireKycApproved`.
-- [ ] Rate limits de registro/login/forgot.
-- [ ] Perfil propio editable y perfil público.
-- [ ] Suspensión de cuentas.
-- [ ] Páginas `/ingresar`, `/registro`, `/verificar-email`, `/recuperar`, `/configuracion`.
-- [ ] Tests de auth, tokens, roles y 18+.
+- [x] Modelos `User`, `AuthIdentity`, `EmailVerificationToken`, `PasswordResetToken`.
+- [x] Migración de auth (`002_auth`).
+- [x] Registro con fecha de nacimiento, 18+, términos y hCaptcha opcional.
+- [x] Login email + password con bcrypt 12 y JWT 1 día en cookie `httpOnly`.
+- [x] Google OAuth 2.0 server-side y vinculación de cuentas.
+- [x] Verificación de email (24 h, SHA-256, un uso) y reenvío.
+- [x] Forgot/reset (1 h, un solo uso, respuesta genérica).
+- [x] `protect`, `restrictTo`, `requireVerifiedEmail`, `requireKycApproved`, `requireOnboardingCompleted`.
+- [x] Rate limits de registro/login/forgot.
+- [x] Perfil propio editable y perfil público.
+- [x] Suspensión de cuentas (bloqueo en login y `protect`; gestión desde admin en Fase 10).
+- [x] Páginas `/ingresar`, `/registro`, `/verificar-email`, `/recuperar`, `/configuracion`, `/completar-perfil`.
+- [x] Tests de auth, tokens, roles y 18+.
 
 **DoD:** flujo completo registro → verificación → login → recuperación; tests, lint y smoke manual.
+
+## Avance Fase 1 (2026-11-09)
+
+- Migración `002_auth`: `auth_identities`, `email_verification_tokens`, `password_reset_tokens` y columnas de perfil/KYC/onboarding.
+- Registro con 18+, términos, bcrypt 12, hCaptcha opcional y token de verificación SHA-256 de 24 h.
+- Login con JWT de 1 día en cookie `httpOnly` (`revia_at`) + hint `revia_session=1`; logout limpia cookies.
+- Verificación de email, reenvío y recuperación de contraseña con tokens de un solo uso (1 h).
+- Google OAuth server-side con vinculación por email y onboarding pendiente para cuentas nuevas.
+- Middlewares `protect`, `restrictTo`, `requireVerifiedEmail`, `requireKycApproved` y `requireOnboardingCompleted`.
+- Perfil propio editable (`PATCH /auth/me`) y perfil público (`GET /users/:id`).
+- Web: `/registro`, `/ingresar`, `/verificar-email`, `/recuperar`, `/completar-perfil`, `/configuracion`.
+- Respecto a colores: se usó una paleta clara y sobria (blanco/neutral/teal), pendiente de rediseño antes de producción.
+- Tests: 18 en total (8 auth, 4 money, 4 middlewares, 2 health); `lint`, `build` y migración `002` down/up en `revia` y `revia_test` verdes.
+- Smoke real: registro → verificación → login con cookie → `/auth/me` → logout → `401`; Google sin configurar redirige a `google_no_config`.
+- Email: con `RESEND_API_KEY` se envía; sin ella, en desarrollo se loguea el link y se devuelve `devVerificationToken`/`devResetToken`.
 
 ## Fase 2 — KYC, perfil y cuenta de payout
 

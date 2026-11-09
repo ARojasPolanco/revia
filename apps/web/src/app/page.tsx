@@ -25,9 +25,15 @@ export default function HomePage() {
           </a>
           <a
             className="rounded-xl border border-neutral-300 px-5 py-3 text-sm font-semibold text-neutral-800"
-            href="/publicar"
+            href="/registro"
           >
-            Publicar
+            Crear cuenta
+          </a>
+          <a
+            className="rounded-xl border border-neutral-300 px-5 py-3 text-sm font-semibold text-neutral-800"
+            href="/configuracion"
+          >
+            Mi cuenta
           </a>
         </div>
       </section>

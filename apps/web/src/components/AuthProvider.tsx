@@ -10,7 +10,8 @@ export interface SessionUser {
   fullName: string;
   role: string;
   emailVerified: boolean;
-  kycStatus?: string;
+  kycStatus: string;
+  onboardingCompleted: boolean;
 }
 
 interface AuthContextValue {
@@ -22,25 +23,11 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
-function hasSessionHint(): boolean {
-  if (typeof document === 'undefined') {
-    return false;
-  }
-
-  return document.cookie.split(';').some((cookie) => cookie.trim().startsWith('revia_session='));
-}
-
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<SessionUser | null>(null);
   const [loading, setLoading] = useState(true);
 
   const refresh = useCallback(async () => {
-    if (!hasSessionHint()) {
-      setUser(null);
-      setLoading(false);
-      return;
-    }
-
     try {
       const data = await apiFetch<{ user: SessionUser }>('/auth/me');
       setUser(data.user);

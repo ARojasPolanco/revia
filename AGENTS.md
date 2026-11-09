@@ -160,9 +160,10 @@ Reglas:
 - `restrictTo(...roles)` para endpoints por rol.
 - `requireVerifiedEmail` para comprar, vender, ofertar, chatear y reseñar.
 - `requireKycApproved` para publicar y cobrar.
+- `requireOnboardingCompleted` hasta que la cuenta tenga fecha de nacimiento y términos (caso Google).
 - Verificación de email: token random, hash SHA-256, vence en 24 h, un solo uso.
 - Reset de contraseña: token random, hash SHA-256, vence en 1 h, un solo uso, respuesta genérica.
-- Google OAuth 2.0 server-side.
+- Google OAuth 2.0 server-side. Las cuentas nuevas con Google entran con onboarding pendiente (fecha de nacimiento y términos) porque Google no aporta la edad.
 - hCaptcha en registro; bypass en test y en desarrollo sin secret.
 - Password 10–128 caracteres.
 - Rate limits por IP, credencial y usuario.

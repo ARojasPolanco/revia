@@ -227,3 +227,19 @@ Formato: `D-XXX · fecha · estado`. Estados: `aceptada`, `revisar`, `reemplazad
 - Contexto: `localStorage` es vulnerable a XSS; se prioriza seguridad sobre paridad con los repos anteriores.
 - Decisión: JWT en cookie `httpOnly` (`revia_at`), `Secure` en producción, `SameSite=None` para cross-site Render/Vercel y `SameSite=Lax` en local. Cookie no sensible `revia_session=1` como hint para el frontend. CORS con `credentials` y verificación de `Origin` para CSRF. Bearer queda soportado solo para tests/herramientas.
 - Consecuencias: más seguro frente a XSS; requiere CORS con credenciales, protección CSRF y cuidado con el dominio de la cookie.
+
+## D-029 · 2026-11-09 · aceptada
+
+**Onboarding obligatorio para cuentas creadas con Google.**
+
+- Contexto: Google aporta email y nombre, pero no fecha de nacimiento ni aceptación de términos.
+- Decisión: las cuentas nuevas con Google se crean con `onboarding_completed=false`, `birth_date` y `accepted_terms_at` nulos. Tras el callback se redirigen a `/completar-perfil`, donde completan edad y términos. El resto de las acciones de negocio exige `requireOnboardingCompleted`.
+- Consecuencias: cumple 18+ sin bloquear el alta con Google; suma un paso de onboarding.
+
+## D-030 · 2026-11-09 · aceptada
+
+**Tokens de desarrollo para probar email sin Resend.**
+
+- Contexto: en local/test no hay proveedor de email configurado.
+- Decisión: cuando `NODE_ENV !== production`, `register`, `resend-verification` y `forgot-password` devuelven `devVerificationToken`/`devResetToken`. Si falta `RESEND_API_KEY`, el link se loguea en consola. En producción nunca se exponen tokens en respuestas.
+- Consecuencias: permite smoke manual completo; exige no filtrar los tokens en producción.

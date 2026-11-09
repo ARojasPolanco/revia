@@ -23,16 +23,17 @@ Roles: `user`, `moderator`, `support`, `finance`, `admin`. Se indica el mínimo 
 | Método | Ruta                        | Auth    | Descripción                                                                        |
 | ------ | --------------------------- | ------- | ---------------------------------------------------------------------------------- |
 | POST   | `/auth/register`            | público | Email, password, nombre, fecha de nacimiento, aceptación 18+ y términos, hCaptcha. |
-| POST   | `/auth/login`               | público | Email + password. Devuelve JWT y usuario.                                          |
+| POST   | `/auth/login`               | público | Email + password. Setea cookie `httpOnly` y devuelve usuario.                      |
 | GET    | `/auth/google`              | público | Inicia OAuth 2.0 con Google.                                                       |
-| GET    | `/auth/google/callback`     | público | Callback de Google; crea/vincula cuenta y redirige con token.                      |
-| POST   | `/auth/verify-email`        | público | Token de verificación.                                                             |
+| GET    | `/auth/google/callback`     | público | Callback de Google; crea/vincula cuenta y redirige a la web.                       |
+| POST   | `/auth/verify-email`        | público | Token de verificación (24 h, un uso).                                              |
 | POST   | `/auth/resend-verification` | usuario | Reenvía email de verificación.                                                     |
-| POST   | `/auth/forgot-password`     | público | Respuesta genérica.                                                                |
+| POST   | `/auth/forgot-password`     | público | Respuesta genérica; token de 1 h.                                                  |
 | POST   | `/auth/reset-password`      | público | Token + nueva password.                                                            |
-| GET    | `/auth/me`                  | usuario | Usuario autenticado con rol, KYC y estado.                                         |
+| POST   | `/auth/complete-onboarding` | usuario | Fecha de nacimiento + términos para cuentas creadas con Google.                    |
+| GET    | `/auth/me`                  | usuario | Usuario autenticado con rol, KYC y estado de onboarding.                           |
 | PATCH  | `/auth/me`                  | usuario | Nombre, bio, ubicación, foto de perfil.                                            |
-| POST   | `/auth/logout`              | usuario | Invalida sesión del cliente (MVP: no hay blacklist).                               |
+| POST   | `/auth/logout`              | público | Limpia las cookies de sesión.                                                      |
 
 Reglas:
 
@@ -40,6 +41,8 @@ Reglas:
 - Email verificado obligatorio para comprar, vender, ofertar y chatear.
 - 18+ obligatorio.
 - Rate limit estricto en register/login/forgot.
+- Las cuentas nuevas con Google quedan con `onboardingCompleted=false` hasta completar fecha de nacimiento y términos.
+- En desarrollo/test, `register`, `resend-verification` y `forgot-password` devuelven `devVerificationToken`/`devResetToken` y los links se loguean si no hay `RESEND_API_KEY`.
 
 ## 3. Usuarios y social
 

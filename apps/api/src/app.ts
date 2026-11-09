@@ -5,10 +5,12 @@ import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
 import { corsOrigins, envs } from './config/envs.js';
 import { globalErrorHandler, notFoundHandler } from './errors/errorController.js';
+import { verifyOrigin } from './middlewares/verifyOrigin.js';
 import { apiRouter } from './routes/index.js';
 
 export const app = express();
 
+app.set('trust proxy', 1);
 app.disable('x-powered-by');
 app.use(helmet());
 app.use(express.json({ limit: '1mb' }));
@@ -19,6 +21,7 @@ app.use(
     credentials: true,
   })
 );
+app.use(verifyOrigin);
 app.use(
   rateLimit({
     windowMs: 15 * 60 * 1000,

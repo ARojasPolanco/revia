@@ -34,6 +34,32 @@ export const loginSchema = z
   })
   .strict();
 
+export const verifyEmailSchema = z
+  .object({
+    token: z.string().min(10).max(256),
+  })
+  .strict();
+
+export const forgotPasswordSchema = z
+  .object({
+    email: emailSchema,
+  })
+  .strict();
+
+export const resetPasswordSchema = z
+  .object({
+    token: z.string().min(10).max(256),
+    password: passwordSchema,
+  })
+  .strict();
+
+export const completeOnboardingSchema = z
+  .object({
+    birthDate: z.string().date(),
+    acceptTerms: z.literal(true),
+  })
+  .strict();
+
 export const userRoleSchema = z.enum(USER_ROLES);
 
 export const listingConditionSchema = z.enum(LISTING_CONDITIONS);
