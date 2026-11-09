@@ -1,0 +1,57 @@
+{
+  "name": "revia",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=22",
+    "npm": ">=10"
+  },
+  "scripts": {
+    "dev": "npm run build:shared && npm run dev -w @revia/api",
+    "dev:web": "npm run build:shared && npm run dev -w @revia/web",
+    "build": "npm run build:shared && npm run build -w @revia/api && npm run build -w @revia/web",
+    "build:shared": "npm run build -w @revia/shared",
+    "build:api": "npm run build:shared && npm run build -w @revia/api",
+    "build:web": "npm run build:shared && npm run build -w @revia/web",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "test": "npm run build:shared && npm run test -w @revia/api",
+    "test:web": "npm run build:shared && npm run test -w @revia/web",
+    "seed": "npm run build:shared && npm run seed -w @revia/api",
+    "seed:admin": "npm run build:shared && npm run seed:admin -w @revia/api",
+    "migrate": "npm run build:shared && npm run migrate -w @revia/api",
+    "migrate:down": "npm run build:shared && npm run migrate:down -w @revia/api",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down",
+    "docker:app": "docker compose --profile app up -d --build",
+    "prepare": "husky || true"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx,json,md,yml,yaml,css}": [
+      "prettier --write"
+    ],
+    "*.{ts,tsx,js,jsx}": [
+      "eslint --fix"
+    ]
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^19.6.0",
+    "@commitlint/config-conventional": "^19.6.0",
+    "@eslint/js": "^9.17.0",
+    "eslint": "^9.17.0",
+    "eslint-config-prettier": "^10.0.1",
+    "eslint-plugin-react": "^7.37.2",
+    "eslint-plugin-react-hooks": "^5.1.0",
+    "globals": "^15.14.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.2.11",
+    "prettier": "^3.4.2",
+    "typescript": "^5.7.2",
+    "typescript-eslint": "^8.18.0"
+  }
+}

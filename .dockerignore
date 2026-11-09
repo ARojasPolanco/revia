@@ -1,0 +1,12 @@
+node_modules
+dist
+.next
+coverage
+.git
+.env
+.env.*
+*.log
+README.md
+AGENTS.md
+TASK.md
+docs

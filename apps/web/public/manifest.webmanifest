@@ -1,0 +1,21 @@
+{
+  "name": "REVIA — Marketplace de segunda mano",
+  "short_name": "REVIA",
+  "description": "Comprá y vendé artículos de segunda mano entre particulares en Bahía Blanca.",
+  "lang": "es-AR",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#fafafa",
+  "theme_color": "#0f766e",
+  "categories": ["shopping", "lifestyle"],
+  "icons": [
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
