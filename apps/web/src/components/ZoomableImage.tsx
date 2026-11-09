@@ -47,7 +47,7 @@ export function ZoomableImage({
     <>
       <button
         aria-label={zoomLabel}
-        className={`group relative block ${wrapperClassName}`}
+        className={`group relative ${wrapperClassName}`}
         type="button"
         onClick={() => setOpen(true)}
       >

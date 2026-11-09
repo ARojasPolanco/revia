@@ -164,8 +164,8 @@ export default function ListingDetailPage() {
               src={currentPhoto.url}
               alt={listing.title}
               loading="eager"
-              wrapperClassName="aspect-[4/3] w-full overflow-hidden rounded-2xl border border-neutral-200 bg-neutral-100"
-              className="h-full w-full object-cover"
+              wrapperClassName="flex h-72 w-full items-center justify-center overflow-hidden rounded-2xl border border-neutral-200 bg-neutral-50 p-2 sm:h-[400px]"
+              className="max-h-full max-w-full object-contain"
             />
           ) : (
             <div className="flex aspect-[4/3] w-full items-center justify-center rounded-2xl bg-neutral-100 text-sm text-neutral-400">
@@ -177,7 +177,7 @@ export default function ListingDetailPage() {
             <div className="grid grid-cols-5 gap-2">
               {photos.map((photo, index) => (
                 <button
-                  className={`overflow-hidden rounded-lg border ${
+                  className={`overflow-hidden rounded-lg border bg-neutral-50 ${
                     index === activePhoto ? 'border-teal-600' : 'border-neutral-200'
                   }`}
                   type="button"
@@ -187,7 +187,7 @@ export default function ListingDetailPage() {
                   <img
                     src={photo.thumbnailUrl}
                     alt={`Foto ${index + 1}`}
-                    className="h-16 w-full object-cover"
+                    className="h-16 w-full object-contain p-1"
                   />
                 </button>
               ))}

@@ -80,7 +80,7 @@ export default function HomePage() {
       <HomeFeed />
 
       <footer className="mt-auto border-t border-neutral-200 pt-6 text-xs text-neutral-500">
-        Fase 0 — scaffold. La aplicación se construye por fases según TASK.md.
+        REVIA · Bahía Blanca · MVP en desarrollo.
       </footer>
     </main>
   );
