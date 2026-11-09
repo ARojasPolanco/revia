@@ -7,12 +7,13 @@ import { kycRouter } from '../modules/kyc/kyc.route.js';
 import {
   adminListingsRouter,
   adminReportsRouter,
+  feedRouter,
   listingsRouter,
   meListingsRouter,
 } from '../modules/listings/listings.route.js';
 import { payoutsRouter } from '../modules/payouts/payouts.route.js';
 import { uploadAvatar } from '../modules/users/users.controller.js';
-import { usersRouter } from '../modules/users/users.route.js';
+import { meFollowsRouter, usersRouter } from '../modules/users/users.route.js';
 import { webhooksRouter } from '../modules/webhooks/webhooks.route.js';
 
 export const apiRouter = Router();
@@ -28,9 +29,11 @@ apiRouter.use('/auth', authRouter);
 apiRouter.use('/users', usersRouter);
 apiRouter.use('/categories', categoriesRouter);
 apiRouter.use('/listings', listingsRouter);
+apiRouter.use('/feed', feedRouter);
 apiRouter.use('/kyc', kycRouter);
 apiRouter.use('/me', payoutsRouter);
 apiRouter.use('/me', meListingsRouter);
+apiRouter.use('/me', meFollowsRouter);
 apiRouter.post('/me/avatar', protect, avatarUpload.single('avatar'), uploadAvatar);
 apiRouter.use('/admin/listings', adminListingsRouter);
 apiRouter.use('/admin/reports', adminReportsRouter);

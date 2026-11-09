@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
+import { useAuth } from '@/components/AuthProvider';
 import { VerifiedBadge } from '@/components/VerifiedBadge';
 import { ApiError, apiFetch } from '@/lib/api';
 import {
@@ -15,12 +16,15 @@ import {
 
 export default function ListingDetailPage() {
   const params = useParams<{ id: string }>();
+  const { user } = useAuth();
   const [listing, setListing] = useState<Listing | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
   const [activePhoto, setActivePhoto] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [reportMessage, setReportMessage] = useState<string | null>(null);
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [favoriteBusy, setFavoriteBusy] = useState(false);
 
   useEffect(() => {
     const id = typeof params.id === 'string' ? params.id : '';
@@ -40,6 +44,45 @@ export default function ListingDetailPage() {
       .then((data) => setCategories(data.categories))
       .catch(() => setCategories([]));
   }, [params.id]);
+
+  useEffect(() => {
+    if (!user || !listing) {
+      return;
+    }
+
+    apiFetch<{ favorite: boolean }>(`/listings/${listing.id}/favorite`)
+      .then((data) => setIsFavorite(data.favorite))
+      .catch(() => setIsFavorite(false));
+  }, [user, listing]);
+
+  async function toggleFavorite() {
+    if (!listing) {
+      return;
+    }
+
+    if (!user) {
+      setReportMessage('Iniciá sesión para guardar favoritos.');
+      return;
+    }
+
+    const previous = isFavorite;
+    setIsFavorite(!previous);
+    setFavoriteBusy(true);
+    setReportMessage(null);
+
+    try {
+      await apiFetch(`/listings/${listing.id}/favorite`, {
+        method: previous ? 'DELETE' : 'POST',
+      });
+    } catch (caught) {
+      setIsFavorite(previous);
+      setReportMessage(
+        caught instanceof ApiError ? caught.message : 'No se pudo actualizar favoritos.'
+      );
+    } finally {
+      setFavoriteBusy(false);
+    }
+  }
 
   async function reportListing() {
     if (!listing) {
@@ -165,13 +208,23 @@ export default function ListingDetailPage() {
               {CONDITION_LABELS[listing.condition] ?? listing.condition} · {listing.location}
             </p>
 
-            <button
-              className="mt-4 w-full cursor-not-allowed rounded-xl bg-neutral-200 px-4 py-3 text-sm font-semibold text-neutral-500"
-              type="button"
-              disabled
-            >
-              Comprar (disponible en la próxima fase)
-            </button>
+            <div className="mt-4 flex flex-col gap-2">
+              <button
+                className="w-full cursor-not-allowed rounded-xl bg-neutral-200 px-4 py-3 text-sm font-semibold text-neutral-500"
+                type="button"
+                disabled
+              >
+                Comprar (disponible en la próxima fase)
+              </button>
+              <button
+                className="w-full rounded-xl border border-teal-700 px-4 py-3 text-sm font-semibold text-teal-700 disabled:opacity-60"
+                type="button"
+                onClick={toggleFavorite}
+                disabled={favoriteBusy}
+              >
+                {isFavorite ? 'Quitar de favoritos' : 'Guardar en favoritos'}
+              </button>
+            </div>
           </div>
 
           <div className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
@@ -205,7 +258,10 @@ export default function ListingDetailPage() {
           </div>
 
           {listing.seller ? (
-            <div className="flex items-center gap-3 rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
+            <Link
+              className="flex items-center gap-3 rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm"
+              href={`/vendedores/${listing.seller.id}`}
+            >
               {listing.seller.avatarUrl ? (
                 <img
                   src={listing.seller.avatarUrl}
@@ -223,8 +279,9 @@ export default function ListingDetailPage() {
                   {listing.seller.sellerVerified ? <VerifiedBadge /> : null}
                 </p>
                 <p className="text-xs text-neutral-500">{listing.seller.location}</p>
+                <p className="text-xs font-semibold text-teal-700">Ver perfil</p>
               </div>
-            </div>
+            </Link>
           ) : null}
 
           <button

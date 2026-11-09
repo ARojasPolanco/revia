@@ -60,6 +60,27 @@ async function createAdmin(email = 'admin@revia.test') {
   return agent;
 }
 
+async function getMe(agent: Awaited<ReturnType<typeof createSeller>>) {
+  const response = await agent.get('/api/v1/auth/me');
+  return response.body.user as { id: string; fullName: string };
+}
+
+async function createActiveListing(
+  seller: Awaited<ReturnType<typeof createSeller>>,
+  overrides: Record<string, unknown> = {}
+): Promise<string> {
+  const { response } = await createDraftListing(seller, overrides);
+  const listingId = response.body.listing.id as string;
+
+  await uploadThreePhotos(seller, listingId);
+  await seller.post(`/api/v1/listings/${listingId}/submit`);
+
+  const admin = await createAdmin(`admin-${Math.random().toString(36).slice(2)}@revia.test`);
+  await admin.post(`/api/v1/admin/listings/${listingId}/approve`);
+
+  return listingId;
+}
+
 async function getLeafCategory(): Promise<{
   id: string;
   name: string;
@@ -117,7 +138,7 @@ beforeAll(async () => {
 
 beforeEach(async () => {
   await sequelize.query(
-    'TRUNCATE TABLE listing_reports, listing_photos, listings, payout_accounts, kyc_verifications, password_reset_tokens, email_verification_tokens, auth_identities, users RESTART IDENTITY CASCADE'
+    'TRUNCATE TABLE favorites, follows, listing_reports, listing_photos, listings, payout_accounts, kyc_verifications, password_reset_tokens, email_verification_tokens, auth_identities, users RESTART IDENTITY CASCADE'
   );
 });
 
@@ -256,5 +277,94 @@ describe('publicaciones', () => {
 
     expect(response.status).toBe(403);
     expect(response.body.message).toContain('verificación de identidad');
+  });
+
+  it('permite seguir, listar seguidores y dejar de seguir', async () => {
+    const seller = await createSeller('seller-follow@revia.test');
+    const sellerUser = await getMe(seller);
+    const { agent: buyer } = await registerVerifyAndLogin('buyer-follow@revia.test');
+
+    const followed = await buyer.post(`/api/v1/users/${sellerUser.id}/follow`);
+    expect(followed.status).toBe(200);
+
+    const relationship = await buyer.get(`/api/v1/users/${sellerUser.id}/relationship`);
+    expect(relationship.body.isFollowing).toBe(true);
+
+    const following = await buyer.get('/api/v1/me/following');
+    expect(following.body.following.some((user: { id: string }) => user.id === sellerUser.id)).toBe(
+      true
+    );
+
+    const followers = await seller.get('/api/v1/me/followers');
+    expect(followers.body.followers).toHaveLength(1);
+
+    const unfollowed = await buyer.delete(`/api/v1/users/${sellerUser.id}/follow`);
+    expect(unfollowed.status).toBe(200);
+
+    const after = await buyer.get(`/api/v1/users/${sellerUser.id}/relationship`);
+    expect(after.body.isFollowing).toBe(false);
+  });
+
+  it('agrega favoritos y arma el feed de seguidos', async () => {
+    const seller = await createSeller('seller-feed@revia.test');
+    const sellerUser = await getMe(seller);
+    const listingId = await createActiveListing(seller);
+    const { agent: buyer } = await registerVerifyAndLogin('buyer-feed@revia.test');
+
+    const feed = await request(app).get('/api/v1/feed');
+    expect(feed.body.listings.some((listing: { id: string }) => listing.id === listingId)).toBe(
+      true
+    );
+
+    await buyer.post(`/api/v1/users/${sellerUser.id}/follow`);
+    const followingFeed = await buyer.get('/api/v1/me/feed');
+    expect(
+      followingFeed.body.listings.some((listing: { id: string }) => listing.id === listingId)
+    ).toBe(true);
+
+    const favorite = await buyer.post(`/api/v1/listings/${listingId}/favorite`);
+    expect(favorite.status).toBe(200);
+
+    const favoriteStatus = await buyer.get(`/api/v1/listings/${listingId}/favorite`);
+    expect(favoriteStatus.body.favorite).toBe(true);
+
+    const favorites = await buyer.get('/api/v1/me/favorites');
+    expect(
+      favorites.body.listings.some((listing: { id: string }) => listing.id === listingId)
+    ).toBe(true);
+
+    await buyer.delete(`/api/v1/listings/${listingId}/favorite`);
+    const after = await buyer.get(`/api/v1/listings/${listingId}/favorite`);
+    expect(after.body.favorite).toBe(false);
+  });
+
+  it('busca por texto y filtra por categoría, precio y orden', async () => {
+    const seller = await createSeller('seller-search@revia.test');
+    const listingId = await createActiveListing(seller, {
+      title: 'Campera azul de abrigo',
+      priceArs: 12_000,
+    });
+    const category = await getLeafCategory();
+
+    const search = await request(app).get('/api/v1/listings?q=Campera');
+    expect(search.body.listings.some((listing: { id: string }) => listing.id === listingId)).toBe(
+      true
+    );
+
+    const none = await request(app).get('/api/v1/listings?q=zzzz');
+    expect(none.body.listings).toHaveLength(0);
+
+    const byCategory = await request(app).get(`/api/v1/listings?categoryId=${category.id}`);
+    expect(
+      byCategory.body.listings.some((listing: { id: string }) => listing.id === listingId)
+    ).toBe(true);
+
+    const byPrice = await request(app).get('/api/v1/listings?minPrice=10000&maxPrice=13000');
+    expect(byPrice.body.listings.some((listing: { id: string }) => listing.id === listingId)).toBe(
+      true
+    );
+
+    const sorted = await request(app).get('/api/v1/listings?sort=price_asc');
+    expect(sorted.status).toBe(200);
   });
 });

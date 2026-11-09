@@ -90,10 +90,20 @@ listingsRouter.post(
   controller.reportListing
 );
 
+listingsRouter.get('/:id/favorite', protect, controller.getFavoriteStatus);
+listingsRouter.post('/:id/favorite', protect, requireVerifiedEmail, controller.addFavorite);
+listingsRouter.delete('/:id/favorite', protect, requireVerifiedEmail, controller.removeFavorite);
+
+export const feedRouter = Router();
+
+feedRouter.get('/', controller.getFeed);
+
 export const meListingsRouter = Router();
 
 meListingsRouter.get('/listings', protect, controller.getMyListings);
 meListingsRouter.get('/listings/:id', protect, controller.getMyListing);
+meListingsRouter.get('/favorites', protect, controller.getMyFavorites);
+meListingsRouter.get('/feed', protect, controller.getFollowingFeed);
 
 export const adminListingsRouter = Router();
 

@@ -39,6 +39,60 @@ export const getPublicListing = catchAsync(async (req: Request, res: Response) =
   });
 });
 
+export const getFeed = catchAsync(async (_req: Request, res: Response) => {
+  const listings = await listingsService.getRecommendedFeed();
+
+  res.status(200).json({
+    status: 'success',
+    listings,
+  });
+});
+
+export const getFollowingFeed = catchAsync(async (req: Request, res: Response) => {
+  const listings = await listingsService.getFollowingFeed(req.user!.id);
+
+  res.status(200).json({
+    status: 'success',
+    listings,
+  });
+});
+
+export const getMyFavorites = catchAsync(async (req: Request, res: Response) => {
+  const listings = await listingsService.getFavoriteListings(req.user!.id);
+
+  res.status(200).json({
+    status: 'success',
+    listings,
+  });
+});
+
+export const addFavorite = catchAsync(async (req: Request, res: Response) => {
+  await listingsService.favoriteListing(req.user!.id, parseId(req.params.id));
+
+  res.status(200).json({
+    status: 'success',
+    message: 'Agregado a favoritos.',
+  });
+});
+
+export const removeFavorite = catchAsync(async (req: Request, res: Response) => {
+  await listingsService.unfavoriteListing(req.user!.id, parseId(req.params.id));
+
+  res.status(200).json({
+    status: 'success',
+    message: 'Quitado de favoritos.',
+  });
+});
+
+export const getFavoriteStatus = catchAsync(async (req: Request, res: Response) => {
+  const favorite = await listingsService.isFavorite(req.user!.id, parseId(req.params.id));
+
+  res.status(200).json({
+    status: 'success',
+    favorite,
+  });
+});
+
 export const getMyListings = catchAsync(async (req: Request, res: Response) => {
   const listings = await listingsService.getOwnerListings(req.user!.id);
 

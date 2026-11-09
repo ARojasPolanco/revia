@@ -259,3 +259,19 @@ Formato: `D-XXX · fecha · estado`. Estados: `aceptada`, `revisar`, `reemplazad
 - Contexto: CBU/CVU/alias son datos sensibles y no deben quedar en texto plano.
 - Decisión: cifrado a nivel aplicación con `PAYOUT_ENCRYPTION_KEY` de 32 bytes (hex o base64). En desarrollo, si falta la clave, se deriva de `JWT_SECRET`; en producción es obligatoria. La API solo devuelve datos enmascarados.
 - Consecuencias: mayor seguridad y cumplimiento; rotar la clave requiere migración de datos cifrados.
+
+## D-033 · 2026-11-09 · aceptada
+
+**Búsqueda con `pg_trgm` y feed simple.**
+
+- Contexto: el MVP necesita búsqueda por texto y un feed sin infraestructura extra.
+- Decisión: índices GIN `pg_trgm` sobre título/descripción y `ILIKE`; feed público de activos recientes y feed privado de vendedores seguidos. Sin Elasticsearch ni motor de recomendación.
+- Consecuencias: búsqueda suficiente para el catálogo local; se puede migrar a `tsvector` o ranking si el volumen lo exige.
+
+## D-034 · 2026-11-09 · aceptada
+
+**Tests de componentes Next.js con Vitest + Testing Library.**
+
+- Contexto: los tests actuales cubren la API; el frontend no tenía cobertura automatizada.
+- Decisión: Vitest con `jsdom`, Testing Library y JSX automático de esbuild. Se testean componentes compartidos y una página real de App Router con `apiFetch` mockeado.
+- Consecuencias: se detectan regresiones de UI antes del smoke manual; no se reemplaza la prueba end-to-end del navegador.

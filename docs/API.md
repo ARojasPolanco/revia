@@ -47,17 +47,18 @@ Reglas:
 
 ## 3. Usuarios y social
 
-| Método | Ruta                  | Auth    | Descripción                                                      |
-| ------ | --------------------- | ------- | ---------------------------------------------------------------- |
-| GET    | `/users/:id`          | público | Perfil público (sin datos sensibles).                            |
-| GET    | `/users/:id/listings` | público | Publicaciones activas del vendedor.                              |
-| GET    | `/users/:id/reviews`  | público | Reseñas recibidas + promedio.                                    |
-| POST   | `/me/avatar`          | usuario | Multipart `avatar` (JPG/PNG/WebP ≤5 MB); recorte 512x512 y WebP. |
-| POST   | `/users/:id/follow`   | usuario | Seguir. Idempotente.                                             |
-| DELETE | `/users/:id/follow`   | usuario | Dejar de seguir.                                                 |
-| GET    | `/me/following`       | usuario | A quién sigo.                                                    |
-| GET    | `/me/followers`       | usuario | Quiénes me siguen.                                               |
-| POST   | `/users/:id/report`   | usuario | Denunciar usuario.                                               |
+| Método | Ruta                      | Auth    | Descripción                                                        |
+| ------ | ------------------------- | ------- | ------------------------------------------------------------------ |
+| GET    | `/users/:id`              | público | Perfil público con `stats` (seguidores, siguiendo, publicaciones). |
+| GET    | `/users/:id/listings`     | público | Publicaciones activas del vendedor.                                |
+| GET    | `/users/:id/reviews`      | público | Reseñas recibidas + promedio.                                      |
+| GET    | `/users/:id/relationship` | usuario | Devuelve `{ isFollowing }` para el usuario autenticado.            |
+| POST   | `/me/avatar`              | usuario | Multipart `avatar` (JPG/PNG/WebP ≤5 MB); recorte 512x512 y WebP.   |
+| POST   | `/users/:id/follow`       | usuario | Seguir. Idempotente.                                               |
+| DELETE | `/users/:id/follow`       | usuario | Dejar de seguir.                                                   |
+| GET    | `/me/following`           | usuario | A quién sigo.                                                      |
+| GET    | `/me/followers`           | usuario | Quiénes me siguen.                                                 |
+| POST   | `/users/:id/report`       | usuario | Denunciar usuario.                                                 |
 
 ## 4. KYC
 
@@ -101,9 +102,12 @@ Reglas:
 | POST   | `/listings/:id/resume`          | dueño        | Reanuda una publicación pausada.                                                                                 |
 | DELETE | `/listings/:id`                 | dueño        | Soft delete.                                                                                                     |
 | POST   | `/listings/:id/report`          | usuario      | Denuncia publicación (`reason` 5–500).                                                                           |
-| POST   | `/listings/:id/favorite`        | usuario      | Favorito. Idempotente (Fase 4).                                                                                  |
-| DELETE | `/listings/:id/favorite`        | usuario      | Quita favorito (Fase 4).                                                                                         |
-| GET    | `/me/favorites`                 | usuario      | Mis favoritos (Fase 4).                                                                                          |
+| GET    | `/listings/:id/favorite`        | usuario      | Devuelve `{ favorite }` para el usuario autenticado.                                                             |
+| POST   | `/listings/:id/favorite`        | usuario      | Agrega a favoritos. Idempotente.                                                                                 |
+| DELETE | `/listings/:id/favorite`        | usuario      | Quita de favoritos.                                                                                              |
+| GET    | `/me/favorites`                 | usuario      | Mis publicaciones favoritas activas/vendidas.                                                                    |
+| GET    | `/feed`                         | público      | Recomendados (activos recientes).                                                                                |
+| GET    | `/me/feed`                      | usuario      | Novedades de vendedores seguidos.                                                                                |
 
 Estados: `draft`, `pending`, `active`, `rejected`, `paused`, `sold`, `deleted`.
 

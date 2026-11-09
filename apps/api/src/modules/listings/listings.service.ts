@@ -12,6 +12,8 @@ import { User } from '../users/user.model.js';
 import { toPublicUser, type PublicUser } from '../auth/auth.service.js';
 import { Category } from '../categories/category.model.js';
 import { CategoryAttribute } from '../categories/categoryAttribute.model.js';
+import { getFollowingIds } from '../users/follows.service.js';
+import { Favorite } from './favorite.model.js';
 import { Listing } from './listing.model.js';
 import { ListingPhoto } from './listingPhoto.model.js';
 import { ListingReport } from './listingReport.model.js';
@@ -343,19 +345,20 @@ export async function getOwnerListings(userId: string): Promise<ListingView[]> {
   return listings.map(toListingView);
 }
 
-export async function listPublicListings(
-  query: ListListingsQuery
-): Promise<{
+export async function listPublicListings(query: ListListingsQuery): Promise<{
   listings: ListingView[];
   pagination: { page: number; limit: number; total: number };
 }> {
-  const where: Record<string, unknown> = {
+  const where: Record<string | symbol, unknown> = {
     status: 'active',
     isDeleted: false,
   };
 
   if (query.q) {
-    where.title = { [Op.iLike]: `%${query.q}%` };
+    where[Op.or] = [
+      { title: { [Op.iLike]: `%${query.q}%` } },
+      { description: { [Op.iLike]: `%${query.q}%` } },
+    ];
   }
 
   if (query.categoryId) {
@@ -663,4 +666,100 @@ export async function resolveReport(
   }
 
   await report.update({ status });
+}
+
+export async function getActiveListingsBySeller(sellerId: string): Promise<ListingView[]> {
+  const listings = await Listing.findAll({
+    where: { sellerId, status: 'active', isDeleted: false },
+    include: listingIncludes,
+    order: [['createdAt', 'DESC']],
+  });
+
+  return listings.map(toListingView);
+}
+
+export async function getRecommendedFeed(limit = 12): Promise<ListingView[]> {
+  const listings = await Listing.findAll({
+    where: { status: 'active', isDeleted: false },
+    include: listingIncludes,
+    order: [['createdAt', 'DESC']],
+    limit,
+  });
+
+  return listings.map(toListingView);
+}
+
+export async function getFollowingFeed(userId: string, limit = 20): Promise<ListingView[]> {
+  const sellerIds = await getFollowingIds(userId);
+
+  if (sellerIds.length === 0) {
+    return [];
+  }
+
+  const listings = await Listing.findAll({
+    where: {
+      status: 'active',
+      isDeleted: false,
+      sellerId: { [Op.in]: sellerIds },
+    },
+    include: listingIncludes,
+    order: [['createdAt', 'DESC']],
+    limit,
+  });
+
+  return listings.map(toListingView);
+}
+
+export async function getFavoriteListings(userId: string): Promise<ListingView[]> {
+  const favorites = await Favorite.findAll({
+    where: { userId },
+    order: [['createdAt', 'DESC']],
+  });
+
+  const ids = favorites.map((favorite) => favorite.listingId);
+
+  if (ids.length === 0) {
+    return [];
+  }
+
+  const listings = await Listing.findAll({
+    where: {
+      id: { [Op.in]: ids },
+      isDeleted: false,
+      status: { [Op.in]: ['active', 'sold'] },
+    },
+    include: listingIncludes,
+  });
+  const listingsById = new Map(listings.map((listing) => [listing.id, listing]));
+
+  return ids
+    .map((id) => listingsById.get(id))
+    .filter((listing): listing is Listing => Boolean(listing))
+    .map(toListingView);
+}
+
+export async function favoriteListing(userId: string, listingId: string): Promise<void> {
+  const listing = await Listing.findByPk(listingId);
+
+  if (!listing || listing.isDeleted) {
+    throw new AppError('No encontramos lo que buscabas.', 404);
+  }
+
+  await Favorite.findOrCreate({
+    where: { userId, listingId },
+  });
+}
+
+export async function unfavoriteListing(userId: string, listingId: string): Promise<void> {
+  await Favorite.destroy({
+    where: { userId, listingId },
+  });
+}
+
+export async function isFavorite(userId: string, listingId: string): Promise<boolean> {
+  const count = await Favorite.count({
+    where: { userId, listingId },
+  });
+
+  return count > 0;
 }

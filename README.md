@@ -115,6 +115,11 @@ npm run dev:web
 
 Los scripts definitivos se ajustan en la Fase 0.
 
+## Tests
+
+- `npm run test`: API con Vitest + Supertest.
+- `npm run test:web`: componentes Next.js con Vitest + Testing Library.
+
 ## Usuarios demo
 
 Después de `npm run migrate`, ejecutá `npm run seed:dev`. Contraseña para todos: `revia12345`.

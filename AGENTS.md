@@ -233,6 +233,13 @@ Reglas:
 - Toda operación de dinero deja evento y auditoría.
 - No se expone Talo al usuario.
 
+### Descubrimiento y social
+
+- Búsqueda con `pg_trgm` sobre título y descripción; filtros por rubro, estado, precio, entrega y orden.
+- Feed público de recomendados y feed privado de vendedores seguidos.
+- Favoritos y follows son idempotentes y no reservan ni modifican la publicación.
+- Optimistic UI en favoritos/follow con rollback ante error.
+
 ### Ofertas
 
 - Descuento máximo 30%.

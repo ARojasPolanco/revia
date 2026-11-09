@@ -4,11 +4,11 @@ Tablero vivo del proyecto. Se actualiza al empezar y al terminar cada tarea. Si 
 
 ## Estado actual
 
-- **Fase:** Fase 3 completada en local (taxonomía, publicaciones, fotos y moderación).
-- **Repo:** `REVIA-fullstack`, rama `dev`, con Fase 0 en `main` y Fases 1-3 en `dev`.
+- **Fase:** Fase 4 completada en local (búsqueda, feed, follows, favoritos y perfil de vendedor).
+- **Repo:** `REVIA-fullstack`, rama `dev`, con Fase 0 en `main` y Fases 1-4 en `dev`.
 - **Alcance:** MVP C2C local en Bahía Blanca, ARS, Tasa de REVIA 7% + $500, custodia y payouts manuales.
 - **Documentos creados:** `AGENTS.md`, `TASK.md`, `docs/SPEC.md`, `docs/ARCHITECTURE.md`, `docs/API.md`, `docs/DECISIONS.md`, `README.md`.
-- **Decisiones abiertas:** ninguna. D-026 a D-032 cerradas.
+- **Decisiones abiertas:** ninguna. D-026 a D-034 cerradas.
 - **Riesgo principal:** operación manual de payouts y dependencia de Talo (solo transferencia).
 - **Última actualización:** 2026-11-09.
 
@@ -194,16 +194,31 @@ Tablero vivo del proyecto. Se actualiza al empezar y al terminar cada tarea. Si 
 
 **Objetivo:** encontrar artículos y guardar vendedores.
 
-- [ ] Búsqueda full-text (`pg_trgm`/`tsvector`) con filtros.
-- [ ] Feed de inicio: recomendados + seguidos.
-- [ ] Modelos `Follow`, `Favorite` y migraciones.
-- [ ] Endpoints de follows y favoritos.
-- [ ] Perfil público de vendedor.
-- [ ] UI de catálogo, filtros, detalle y favoritos.
-- [ ] Optimistic UI en favoritos.
-- [ ] Tests de búsqueda, filtros, follows y favoritos.
+- [x] Búsqueda con `pg_trgm` sobre título y descripción + filtros por rubro, estado, precio y orden.
+- [x] Feed: recomendados público + novedades de vendedores seguidos.
+- [x] Modelos `Follow`, `Favorite` y migración `006_social`.
+- [x] Endpoints de follows, relación, favoritos y feed.
+- [x] Perfil público de vendedor con estadísticas y publicaciones activas.
+- [x] UI de catálogo con filtros, detalle, favoritos y perfil de vendedor.
+- [x] Optimistic UI en favoritos y seguimiento, con rollback.
+- [x] Tests de búsqueda, filtros, follows y favoritos.
+- [x] Tests de componentes Next.js con Vitest + Testing Library.
 
 **DoD:** catálogo navegable, búsqueda con filtros, feed y favoritos funcionando.
+
+## Avance Fase 4 (2026-11-09)
+
+- Migración `006_social`: `follows`, `favorites` e índices `pg_trgm` para búsqueda.
+- Búsqueda por título/descripción con filtros de rubro, estado, precio, modalidad y orden.
+- Feed público de recomendados y feed privado de vendedores seguidos.
+- Seguir/dejar de seguir con contador de seguidores y perfil público `/vendedores/[id]`.
+- Favoritos con alta/baja idempotente, estado por publicación y página `/favoritos`.
+- UI: catálogo con filtros, tarjetas reutilizables, detalle con favorito, feed en inicio y perfil de vendedor.
+- Optimistic UI en favoritos y follow, con rollback ante error.
+- Tests de componentes Next.js: `VerifiedBadge`, `InfoTooltip`, `ListingFields` y `ListingsPage` (5 tests).
+- Tests totales: **50 API + 5 web**; build y lint verdes.
+- Migración `006` down/up verificada en `revia` y `revia_test`.
+- Smoke real: follow + favorito + feed + búsqueda + perfil de vendedor respondiendo correctamente.
 
 ## Fase 5 — Ofertas, chat y notificaciones in-app
 

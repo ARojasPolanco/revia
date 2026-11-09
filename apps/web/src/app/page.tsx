@@ -1,3 +1,5 @@
+import { HomeFeed } from '@/components/HomeFeed';
+
 export default function HomePage() {
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-5xl flex-col gap-10 px-5 py-12">
@@ -37,6 +39,12 @@ export default function HomePage() {
           </a>
           <a
             className="rounded-xl border border-neutral-300 px-5 py-3 text-sm font-semibold text-neutral-800"
+            href="/favoritos"
+          >
+            Favoritos
+          </a>
+          <a
+            className="rounded-xl border border-neutral-300 px-5 py-3 text-sm font-semibold text-neutral-800"
             href="/configuracion"
           >
             Mi cuenta
@@ -68,6 +76,8 @@ export default function HomePage() {
           </article>
         ))}
       </section>
+
+      <HomeFeed />
 
       <footer className="mt-auto border-t border-neutral-200 pt-6 text-xs text-neutral-500">
         Fase 0 — scaffold. La aplicación se construye por fases según TASK.md.
