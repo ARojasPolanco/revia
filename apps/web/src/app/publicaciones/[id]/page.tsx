@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useAuth } from '@/components/AuthProvider';
 import { VerifiedBadge } from '@/components/VerifiedBadge';
+import { ZoomableImage } from '@/components/ZoomableImage';
 import { ApiError, apiFetch } from '@/lib/api';
 import {
   CONDITION_LABELS,
@@ -159,13 +160,15 @@ export default function ListingDetailPage() {
       <div className="grid gap-6 lg:grid-cols-[1.2fr_1fr]">
         <section className="flex flex-col gap-3">
           {currentPhoto ? (
-            <img
+            <ZoomableImage
               src={currentPhoto.url}
               alt={listing.title}
-              className="h-80 w-full rounded-2xl border border-neutral-200 object-cover sm:h-[420px]"
+              loading="eager"
+              wrapperClassName="aspect-[4/3] w-full overflow-hidden rounded-2xl border border-neutral-200 bg-neutral-100"
+              className="h-full w-full object-cover"
             />
           ) : (
-            <div className="flex h-80 items-center justify-center rounded-2xl bg-neutral-100 text-sm text-neutral-400 sm:h-[420px]">
+            <div className="flex aspect-[4/3] w-full items-center justify-center rounded-2xl bg-neutral-100 text-sm text-neutral-400">
               Sin foto
             </div>
           )}
