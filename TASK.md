@@ -145,6 +145,7 @@ Tablero vivo del proyecto. Se actualiza al empezar y al terminar cada tarea. Si 
 - Tests: 33 en total; `lint`, `build` y migración `003` down/up en `revia` y `revia_test` verdes.
 - Smoke real: payout bloqueado sin KYC (403) → sesión mock → aprobación → payout `active` con cuenta enmascarada; `/auth/me` refleja `kycStatus=approved`.
 - Nota: la integración real de Didit requiere `DIDIT_API_KEY` y `DIDIT_WORKFLOW_ID`; sin ellos, solo mock local.
+- Seed `npm run seed:dev`: usuarios `demo@revia.test`, `pendiente@revia.test`, `vendedor@revia.test` y `admin@revia.test` (contraseña `revia12345`) para probar `/configuracion`, `/verificacion` y `/completar-perfil` sin depender de Google.
 
 ## Fase 3 — Categorías, publicaciones, fotos y moderación
 

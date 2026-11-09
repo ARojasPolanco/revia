@@ -349,6 +349,7 @@ npm run lint             # ESLint
 npm run test             # tests de API
 npm run test:web         # tests de web
 npm run seed             # seed de desarrollo
+npm run seed:dev         # usuarios demo para probar pantallas protegidas
 npm run seed:admin       # crea admin inicial
 ```
 
