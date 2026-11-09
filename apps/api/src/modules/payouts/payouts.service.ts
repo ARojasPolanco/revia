@@ -33,7 +33,7 @@ export function validatePayoutAccount(method: string, account: string): void {
 
   if (method === 'cbu' || method === 'cvu') {
     if (!/^\d{22}$/.test(value)) {
-      throw new AppError('El CBU/CVU debe tener 22 dígitos', 422);
+      throw new AppError('El CBU o CVU debe tener 22 números.', 422);
     }
 
     return;
@@ -47,7 +47,7 @@ export function validatePayoutAccount(method: string, account: string): void {
     return;
   }
 
-  throw new AppError('Método de cobro inválido', 422);
+  throw new AppError('Elegí un método de cobro válido.', 422);
 }
 
 export function maskPayoutAccount(method: string, account: string): string {
@@ -89,7 +89,7 @@ export async function upsertPayoutAccount(
   const user = await User.findByPk(userId);
 
   if (!user || user.isDeleted) {
-    throw new AppError('No autenticado', 401);
+    throw new AppError('Iniciá sesión para continuar.', 401);
   }
 
   validatePayoutAccount(input.method, input.account);

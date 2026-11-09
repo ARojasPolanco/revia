@@ -8,7 +8,7 @@ describe('manejo de errores', () => {
 
     expect(response.status).toBe(404);
     expect(response.body.status).toBe('fail');
-    expect(response.body.message).toContain('Ruta no encontrada');
+    expect(response.body.message).toBe('No encontramos lo que buscabas.');
   });
 
   it('devuelve 400 cuando el JSON es inválido', async () => {
@@ -19,7 +19,7 @@ describe('manejo de errores', () => {
 
     expect(response.status).toBe(400);
     expect(response.body.status).toBe('fail');
-    expect(response.body.message).toContain('JSON válido');
+    expect(response.body.message).toBe('No pudimos procesar la solicitud. Probá de nuevo.');
   });
 
   it('devuelve 422 con campos obligatorios en español', async () => {
@@ -27,7 +27,8 @@ describe('manejo de errores', () => {
 
     expect(response.status).toBe(422);
     expect(response.body.status).toBe('fail');
-    expect(response.body.message).toContain('obligatorio');
+    expect(response.body.message).toContain('Faltan completar');
+    expect(response.body.message).toContain('aceptar los términos y condiciones');
   });
 
   it('devuelve 422 con email inválido en español', async () => {
@@ -40,7 +41,7 @@ describe('manejo de errores', () => {
     });
 
     expect(response.status).toBe(422);
-    expect(response.body.message).toContain('email no es un email válido');
+    expect(response.body.message).toBe('Ingresá un email válido.');
   });
 
   it('devuelve 422 con longitud mínima comprensible', async () => {
@@ -53,7 +54,7 @@ describe('manejo de errores', () => {
     });
 
     expect(response.status).toBe(422);
-    expect(response.body.message).toContain('al menos 10 caracteres');
+    expect(response.body.message).toContain('debe tener al menos 10 caracteres');
   });
 
   it('devuelve 401 comprensible sin sesión', async () => {
@@ -61,6 +62,6 @@ describe('manejo de errores', () => {
 
     expect(response.status).toBe(401);
     expect(response.body.status).toBe('fail');
-    expect(response.body.message).toBe('No autenticado');
+    expect(response.body.message).toBe('Iniciá sesión para continuar.');
   });
 });

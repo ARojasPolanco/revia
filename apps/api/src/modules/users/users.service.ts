@@ -6,7 +6,7 @@ export async function getPublicProfile(userId: string): Promise<PublicUser> {
   const user = await User.findByPk(userId);
 
   if (!user || user.isDeleted) {
-    throw new AppError('Usuario no encontrado', 404);
+    throw new AppError('No encontramos ese usuario.', 404);
   }
 
   return toPublicUser(user);

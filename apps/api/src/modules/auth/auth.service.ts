@@ -195,7 +195,7 @@ export async function login(input: LoginInput): Promise<{ user: User; token: str
   }
 
   if (user.isSuspended) {
-    throw new AppError('Tu cuenta está suspendida', 403);
+    throw new AppError('Tu cuenta está suspendida. Escribinos a soporte.', 403);
   }
 
   if (!user.passwordHash) {
@@ -237,7 +237,7 @@ export async function resendVerification(userId: string): Promise<string> {
   const user = await User.findByPk(userId);
 
   if (!user || user.isDeleted) {
-    throw new AppError('No autenticado', 401);
+    throw new AppError('Iniciá sesión para continuar.', 401);
   }
 
   if (user.emailVerified) {
@@ -310,7 +310,7 @@ export async function completeOnboarding(
   const user = await User.findByPk(userId);
 
   if (!user || user.isDeleted) {
-    throw new AppError('No autenticado', 401);
+    throw new AppError('Iniciá sesión para continuar.', 401);
   }
 
   await user.update({
@@ -326,7 +326,7 @@ export async function updateProfile(userId: string, input: UpdateProfileInput): 
   const user = await User.findByPk(userId);
 
   if (!user || user.isDeleted) {
-    throw new AppError('No autenticado', 401);
+    throw new AppError('Iniciá sesión para continuar.', 401);
   }
 
   await user.update({
@@ -400,7 +400,7 @@ export async function loginWithGoogle(profile: GoogleProfile): Promise<{
   }
 
   if (user.isSuspended) {
-    throw new AppError('Tu cuenta está suspendida', 403);
+    throw new AppError('Tu cuenta está suspendida. Escribinos a soporte.', 403);
   }
 
   await user.update({ lastLoginAt: new Date() });
@@ -412,7 +412,7 @@ export async function getMe(userId: string): Promise<User> {
   const user = await User.findByPk(userId);
 
   if (!user || user.isDeleted) {
-    throw new AppError('No autenticado', 401);
+    throw new AppError('Iniciá sesión para continuar.', 401);
   }
 
   return user;

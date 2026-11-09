@@ -11,11 +11,11 @@ export async function verifyHcaptcha(token?: string): Promise<void> {
   }
 
   if (!envs.HCAPTCHA_SECRET) {
-    throw new AppError('CAPTCHA mal configurado', 500);
+    throw new AppError('La verificación de seguridad no está disponible.', 500);
   }
 
   if (!token) {
-    throw new AppError('CAPTCHA requerido', 422);
+    throw new AppError('Completá la verificación de seguridad.', 422);
   }
 
   const body = new URLSearchParams({
@@ -34,6 +34,6 @@ export async function verifyHcaptcha(token?: string): Promise<void> {
   const data = (await response.json()) as HcaptchaResponse;
 
   if (!data.success) {
-    throw new AppError('CAPTCHA inválido', 422);
+    throw new AppError('La verificación de seguridad no es válida.', 422);
   }
 }

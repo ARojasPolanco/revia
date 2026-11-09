@@ -13,7 +13,7 @@ export async function saveAvatar(
   const user = await User.findByPk(userId);
 
   if (!user || user.isDeleted) {
-    throw new AppError('No autenticado', 401);
+    throw new AppError('Iniciá sesión para continuar.', 401);
   }
 
   ensureUploadsDir();

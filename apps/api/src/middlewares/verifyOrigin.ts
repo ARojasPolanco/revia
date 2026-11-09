@@ -18,7 +18,7 @@ export function verifyOrigin(req: Request, _res: Response, next: NextFunction): 
   const origin = req.get('origin');
 
   if (!origin || !corsOrigins.includes(origin)) {
-    next(new AppError('Origen no permitido', 403));
+    next(new AppError('No pudimos procesar la solicitud desde este sitio.', 403));
     return;
   }
 

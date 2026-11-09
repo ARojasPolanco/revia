@@ -10,7 +10,7 @@ export const getPublicProfile = catchAsync(async (req: Request, res: Response) =
   const parsedId = uuidSchema.safeParse(req.params.id);
 
   if (!parsedId.success) {
-    throw new AppError('ID inválido', 400);
+    throw new AppError('No encontramos lo que buscabas.', 400);
   }
 
   const user = await usersService.getPublicProfile(parsedId.data);
@@ -23,7 +23,7 @@ export const getPublicProfile = catchAsync(async (req: Request, res: Response) =
 
 export const uploadAvatar = catchAsync(async (req: Request, res: Response) => {
   if (!req.file) {
-    throw new AppError('Seleccioná una imagen para subir', 422);
+    throw new AppError('Seleccioná una foto para subir.', 422);
   }
 
   const { user } = await saveAvatar(req.user!.id, req.file.buffer);

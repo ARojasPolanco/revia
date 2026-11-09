@@ -51,7 +51,7 @@ export async function protect(req: Request, _res: Response, next: NextFunction):
     const token = extractToken(req);
 
     if (!token) {
-      throw new AppError('No autenticado', 401);
+      throw new AppError('Iniciá sesión para continuar.', 401);
     }
 
     let payload: TokenPayload;
@@ -59,24 +59,24 @@ export async function protect(req: Request, _res: Response, next: NextFunction):
     try {
       payload = jwt.verify(token, envs.JWT_SECRET) as TokenPayload;
     } catch {
-      throw new AppError('Sesión inválida o expirada', 401);
+      throw new AppError('Tu sesión expiró. Volvé a iniciar sesión.', 401);
     }
 
     const user = await User.findByPk(payload.id);
 
     if (!user || user.isDeleted) {
-      throw new AppError('No autenticado', 401);
+      throw new AppError('Iniciá sesión para continuar.', 401);
     }
 
     if (user.isSuspended) {
-      throw new AppError('Cuenta suspendida', 403);
+      throw new AppError('Tu cuenta está suspendida. Escribinos a soporte.', 403);
     }
 
     if (user.passwordChangedAt && payload.iat) {
       const changedAtSeconds = Math.floor(user.passwordChangedAt.getTime() / 1000);
 
       if (payload.iat < changedAtSeconds) {
-        throw new AppError('Sesión inválida o expirada', 401);
+        throw new AppError('Tu sesión expiró. Volvé a iniciar sesión.', 401);
       }
     }
 
@@ -99,7 +99,7 @@ export async function protect(req: Request, _res: Response, next: NextFunction):
 export function restrictTo(...roles: string[]) {
   return (req: Request, _res: Response, next: NextFunction): void => {
     if (!req.user) {
-      next(new AppError('No autenticado', 401));
+      next(new AppError('Iniciá sesión para continuar.', 401));
       return;
     }
 
@@ -114,7 +114,7 @@ export function restrictTo(...roles: string[]) {
 
 export function requireVerifiedEmail(req: Request, _res: Response, next: NextFunction): void {
   if (!req.user) {
-    next(new AppError('No autenticado', 401));
+    next(new AppError('Iniciá sesión para continuar.', 401));
     return;
   }
 
@@ -128,7 +128,7 @@ export function requireVerifiedEmail(req: Request, _res: Response, next: NextFun
 
 export function requireKycApproved(req: Request, _res: Response, next: NextFunction): void {
   if (!req.user) {
-    next(new AppError('No autenticado', 401));
+    next(new AppError('Iniciá sesión para continuar.', 401));
     return;
   }
 
@@ -142,7 +142,7 @@ export function requireKycApproved(req: Request, _res: Response, next: NextFunct
 
 export function requireOnboardingCompleted(req: Request, _res: Response, next: NextFunction): void {
   if (!req.user) {
-    next(new AppError('No autenticado', 401));
+    next(new AppError('Iniciá sesión para continuar.', 401));
     return;
   }
 

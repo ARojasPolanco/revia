@@ -1,11 +1,16 @@
 import type { NextFunction, Request, Response } from 'express';
 import { envs } from '../config/envs.js';
+import { logger } from '../config/logger.js';
 import { AppError } from './appError.js';
 import { matchError } from './errorMatchers.js';
 import { logUnexpectedError } from '../modules/logs/errorLog.service.js';
 
 export function notFoundHandler(req: Request, _res: Response, next: NextFunction): void {
-  next(new AppError(`Ruta no encontrada: ${req.method} ${req.originalUrl}`, 404));
+  logger.warn('Ruta no encontrada', {
+    method: req.method,
+    path: req.originalUrl,
+  });
+  next(new AppError('No encontramos lo que buscabas.', 404));
 }
 
 export function globalErrorHandler(
@@ -17,14 +22,20 @@ export function globalErrorHandler(
   const matched = matchError(error);
   const statusCode = matched?.statusCode ?? 500;
   const status = matched?.status ?? 'error';
-  const message = matched?.message ?? 'Error interno del servidor';
+  const technicalMessage = matched?.message ?? 'Algo salió mal. Probá de nuevo en unos minutos.';
+  const message =
+    statusCode === 503
+      ? 'El servicio no está disponible en este momento. Probá en unos minutos.'
+      : statusCode >= 500 && envs.NODE_ENV === 'production'
+        ? 'Algo salió mal. Probá de nuevo en unos minutos.'
+        : technicalMessage;
 
   if (statusCode >= 500) {
     const authenticatedRequest = req as Request & { user?: { id?: string } };
     void logUnexpectedError({
       statusCode,
       status,
-      message,
+      message: technicalMessage,
       stack: error instanceof Error ? error.stack : undefined,
       path: req.originalUrl,
       method: req.method,

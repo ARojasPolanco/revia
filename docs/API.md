@@ -316,4 +316,4 @@ Respuesta incluye `flagged_contact: true|false` y `warning`.
 | 413    | El cuerpo de la solicitud supera el límite.                      |
 | 503    | Base de datos o servicio externo temporalmente no disponible.    |
 
-Los mensajes de validación se devuelven en español con el campo afectado (por ejemplo, `password debe tener al menos 10 caracteres`). Nunca se exponen detalles de PostgreSQL, Talo ni Didit.
+Los mensajes de validación se devuelven en español con el campo afectado (por ejemplo, `El campo contraseña debe tener al menos 10 caracteres`). Los mensajes al usuario no incluyen términos técnicos (JSON, rutas, tablas, stack) ni detalles de PostgreSQL, Talo o Didit.

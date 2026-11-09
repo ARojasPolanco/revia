@@ -45,7 +45,7 @@ async function getUserOrFail(userId: string): Promise<User> {
   const user = await User.findByPk(userId);
 
   if (!user || user.isDeleted) {
-    throw new AppError('No autenticado', 401);
+    throw new AppError('Iniciá sesión para continuar.', 401);
   }
 
   return user;
