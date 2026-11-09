@@ -206,6 +206,16 @@ Reglas:
 
 ## 13. Reglas de negocio críticas
 
+### Publicaciones
+
+- Solo publica un vendedor con email verificado, onboarding completo y KYC aprobado.
+- Nacen en `draft`; pasan a `pending` al enviarlas a revisión y solo son públicas en `active`.
+- Requieren mínimo 3 fotos y máximo 10; JPG/PNG/WebP de hasta 8 MB, procesadas con `sharp`.
+- Los atributos obligatorios de cada subcategoría se validan al enviar a revisión.
+- Solo se editan en `draft`, `rejected` o `paused`; una publicación activa se pausa antes de editar.
+- La moderación previa aprueba o rechaza con motivo; el vendedor puede corregir y reenviar.
+- Denuncias de publicaciones se registran y las resuelve moderación.
+
 ### Tasa
 
 - `tasa_amount_ars = round(item_price_ars * tasa_percent / 100) + tasa_fixed_ars`.

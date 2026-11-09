@@ -24,6 +24,7 @@
     "test:web": "npm run build:shared && npm run test -w @revia/web",
     "seed": "npm run build:shared && npm run seed -w @revia/api",
     "seed:dev": "npm run build:shared && npm run seed:dev -w @revia/api",
+    "seed:categories": "npm run build:shared && npm run seed:categories -w @revia/api",
     "seed:admin": "npm run build:shared && npm run seed:admin -w @revia/api",
     "migrate": "npm run build:shared && npm run migrate -w @revia/api",
     "migrate:down": "npm run build:shared && npm run migrate:down -w @revia/api",

@@ -193,6 +193,8 @@ Vendedor → POST /kyc/session → Didit crea sesión
 5. Se guarda la URL pública/CDN y el orden en `listing_photos`.
 6. Al eliminar una publicación se hace soft delete y se limpian assets por job.
 
+En desarrollo, las fotos de publicaciones se guardan en `apps/api/uploads/listings/<listingId>/` y se sirven desde `/uploads`. En producción se migrarán a R2/Cloudinary; el disco de Render es efímero.
+
 **Avatares:** en desarrollo se procesan con `sharp` (512×512, WebP) y se guardan en `apps/api/uploads/avatars`, servidos desde `/uploads`. En producción se migrará a R2 o Cloudinary; el disco de Render es efímero y no debe usarse para almacenamiento permanente.
 
 ## 8. Tiempo real y notificaciones

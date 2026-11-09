@@ -86,23 +86,28 @@ Reglas:
 
 ## 6. Publicaciones
 
-| Método | Ruta                            | Auth         | Descripción                                                                                      |
-| ------ | ------------------------------- | ------------ | ------------------------------------------------------------------------------------------------ |
-| GET    | `/listings`                     | público      | Catálogo con filtros `q`, `category`, `condition`, `min_price`, `max_price`, `delivery`, `sort`. |
-| GET    | `/listings/:id`                 | público      | Detalle; incluye vendedor, fotos y estado.                                                       |
-| POST   | `/listings`                     | vendedor KYC | Crea publicación en `pending`.                                                                   |
-| PATCH  | `/listings/:id`                 | dueño        | Edita campos permitidos.                                                                         |
-| DELETE | `/listings/:id`                 | dueño        | Soft delete.                                                                                     |
-| POST   | `/listings/:id/pause`           | dueño        | Pausa.                                                                                           |
-| POST   | `/listings/:id/resume`          | dueño        | Reanuda.                                                                                         |
-| POST   | `/listings/:id/photos`          | dueño        | Multipart; mínimo 3 al enviar a revisión.                                                        |
-| DELETE | `/listings/:id/photos/:photoId` | dueño        | Elimina foto.                                                                                    |
-| POST   | `/listings/:id/favorite`        | usuario      | Favorito. Idempotente.                                                                           |
-| DELETE | `/listings/:id/favorite`        | usuario      | Quita favorito.                                                                                  |
-| GET    | `/me/favorites`                 | usuario      | Mis favoritos.                                                                                   |
-| POST   | `/listings/:id/report`          | usuario      | Denuncia publicación.                                                                            |
+| Método | Ruta                            | Auth         | Descripción                                                                                                      |
+| ------ | ------------------------------- | ------------ | ---------------------------------------------------------------------------------------------------------------- |
+| GET    | `/listings`                     | público      | Catálogo activo con `q`, `categoryId`, `condition`, `minPrice`, `maxPrice`, `delivery`, `sort`, `page`, `limit`. |
+| GET    | `/listings/:id`                 | público      | Detalle activo/vendido; incluye vendedor, categoría y fotos.                                                     |
+| GET    | `/me/listings`                  | usuario      | Todas mis publicaciones con estado y motivo de rechazo.                                                          |
+| GET    | `/me/listings/:id`              | usuario      | Detalle de una publicación propia en cualquier estado.                                                           |
+| POST   | `/listings`                     | vendedor KYC | Crea la publicación en `draft`.                                                                                  |
+| PATCH  | `/listings/:id`                 | dueño        | Edita en `draft`, `rejected` o `paused`.                                                                         |
+| POST   | `/listings/:id/photos`          | dueño        | Multipart `photos` (1–10 por request; máximo 10 en total; JPG/PNG/WebP ≤8 MB).                                   |
+| DELETE | `/listings/:id/photos/:photoId` | dueño        | Elimina una foto (soft delete).                                                                                  |
+| POST   | `/listings/:id/submit`          | dueño        | Valida atributos y mínimo 3 fotos; pasa a `pending`.                                                             |
+| POST   | `/listings/:id/pause`           | dueño        | Pausa una publicación activa.                                                                                    |
+| POST   | `/listings/:id/resume`          | dueño        | Reanuda una publicación pausada.                                                                                 |
+| DELETE | `/listings/:id`                 | dueño        | Soft delete.                                                                                                     |
+| POST   | `/listings/:id/report`          | usuario      | Denuncia publicación (`reason` 5–500).                                                                           |
+| POST   | `/listings/:id/favorite`        | usuario      | Favorito. Idempotente (Fase 4).                                                                                  |
+| DELETE | `/listings/:id/favorite`        | usuario      | Quita favorito (Fase 4).                                                                                         |
+| GET    | `/me/favorites`                 | usuario      | Mis favoritos (Fase 4).                                                                                          |
 
 Estados: `draft`, `pending`, `active`, `rejected`, `paused`, `sold`, `deleted`.
+
+Flujo: `POST /listings` crea el borrador → `POST /listings/:id/photos` agrega imágenes → `POST /listings/:id/submit` envía a moderación → aprobación/rechazo desde admin. Las fotos se procesan con `sharp` (1600 px + thumbnail 400 px) y en desarrollo se sirven desde `/uploads`; producción usará R2/Cloudinary.
 
 ## 7. Ofertas
 
@@ -248,24 +253,26 @@ Respuesta incluye `flagged_contact: true|false` y `warning`.
 
 ## 14. Admin
 
-| Método | Ruta                             | Rol       | Descripción               |
-| ------ | -------------------------------- | --------- | ------------------------- |
-| GET    | `/admin/metrics`                 | admin     | KPIs y series.            |
-| GET    | `/admin/listings?status=pending` | moderator | Cola de moderación.       |
-| POST   | `/admin/listings/:id/approve`    | moderator | Aprueba.                  |
-| POST   | `/admin/listings/:id/reject`     | moderator | Rechaza con motivo.       |
-| GET    | `/admin/users`                   | admin     | Búsqueda y filtros.       |
-| PATCH  | `/admin/users/:id`               | admin     | Suspender/reactivar, rol. |
-| GET    | `/admin/orders`                  | support   | Órdenes con filtros.      |
-| POST   | `/admin/orders/:id/refund`       | finance   | Reembolso total/parcial.  |
-| GET    | `/admin/payouts`                 | finance   | Cola.                     |
-| POST   | `/admin/payouts/:id/mark-paid`   | finance   | Transferencia realizada.  |
-| GET    | `/admin/disputes`                | support   | Bandeja.                  |
-| POST   | `/admin/disputes/:id/resolve`    | support   | Resolución.               |
-| GET    | `/admin/reports`                 | moderator | Denuncias.                |
-| POST   | `/admin/reports/:id/resolve`     | moderator | Resolución.               |
-| POST   | `/admin/notifications/broadcast` | admin     | Aviso masivo.             |
-| GET    | `/admin/audit-logs`              | admin     | Auditoría.                |
+| Método | Ruta                             | Rol       | Descripción                            |
+| ------ | -------------------------------- | --------- | -------------------------------------- |
+| GET    | `/admin/metrics`                 | admin     | KPIs y series.                         |
+| GET    | `/admin/listings?status=pending` | moderator | Cola de moderación (cualquier estado). |
+| POST   | `/admin/listings/:id/approve`    | moderator | Aprueba (`pending` → `active`).        |
+| POST   | `/admin/listings/:id/reject`     | moderator | Rechaza con motivo (`reason` 5–500).   |
+| GET    | `/admin/reports?status=open`     | moderator | Denuncias de publicaciones.            |
+| POST   | `/admin/reports/:id/resolve`     | moderator | `resolved` o `dismissed`.              |
+| GET    | `/admin/users`                   | admin     | Búsqueda y filtros.                    |
+| PATCH  | `/admin/users/:id`               | admin     | Suspender/reactivar, rol.              |
+| GET    | `/admin/orders`                  | support   | Órdenes con filtros.                   |
+| POST   | `/admin/orders/:id/refund`       | finance   | Reembolso total/parcial.               |
+| GET    | `/admin/payouts`                 | finance   | Cola.                                  |
+| POST   | `/admin/payouts/:id/mark-paid`   | finance   | Transferencia realizada.               |
+| GET    | `/admin/disputes`                | support   | Bandeja.                               |
+| POST   | `/admin/disputes/:id/resolve`    | support   | Resolución.                            |
+| GET    | `/admin/reports`                 | moderator | Denuncias.                             |
+| POST   | `/admin/reports/:id/resolve`     | moderator | Resolución.                            |
+| POST   | `/admin/notifications/broadcast` | admin     | Aviso masivo.                          |
+| GET    | `/admin/audit-logs`              | admin     | Auditoría.                             |
 
 ## 15. Webhooks
 

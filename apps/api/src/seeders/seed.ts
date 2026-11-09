@@ -3,6 +3,7 @@ import { envs } from '../config/envs.js';
 import { logger } from '../config/logger.js';
 import { sequelize } from '../config/database.js';
 import { User } from '../modules/users/user.model.js';
+import { seedCategories } from './categories.js';
 
 const DEMO_PASSWORD = 'revia12345';
 
@@ -79,6 +80,7 @@ async function run(): Promise<void> {
   }
 
   await sequelize.authenticate();
+  await seedCategories();
 
   for (const user of demoUsers) {
     await upsertDemoUser(user);

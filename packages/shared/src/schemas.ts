@@ -88,7 +88,6 @@ export const createListingSchema = z
     title: z.string().trim().min(5).max(80),
     description: z.string().trim().min(20).max(2000),
     categoryId: uuidSchema,
-    subcategoryId: uuidSchema.optional(),
     condition: listingConditionSchema,
     priceArs: moneyArsSchema,
     deliveryModes: z.array(deliveryModeSchema).min(1),
@@ -96,6 +95,47 @@ export const createListingSchema = z
     allowOffers: z.boolean().default(true),
     location: z.string().trim().min(2).max(120),
     attributes: z.record(z.string(), z.union([z.string(), z.number(), z.boolean()])).optional(),
+  })
+  .strict();
+
+export const updateListingSchema = z
+  .object({
+    title: z.string().trim().min(5).max(80).optional(),
+    description: z.string().trim().min(20).max(2000).optional(),
+    categoryId: uuidSchema.optional(),
+    condition: listingConditionSchema.optional(),
+    priceArs: moneyArsSchema.optional(),
+    deliveryModes: z.array(deliveryModeSchema).min(1).optional(),
+    midpointFeeArs: z.number().int().min(0).optional(),
+    allowOffers: z.boolean().optional(),
+    location: z.string().trim().min(2).max(120).optional(),
+    attributes: z.record(z.string(), z.union([z.string(), z.number(), z.boolean()])).optional(),
+  })
+  .strict();
+
+export const reportListingSchema = z
+  .object({
+    reason: z.string().trim().min(5).max(500),
+  })
+  .strict();
+
+export const rejectListingSchema = z
+  .object({
+    reason: z.string().trim().min(5).max(500),
+  })
+  .strict();
+
+export const listListingsQuerySchema = z
+  .object({
+    q: z.string().trim().max(100).optional(),
+    categoryId: uuidSchema.optional(),
+    condition: listingConditionSchema.optional(),
+    minPrice: z.coerce.number().int().min(0).optional(),
+    maxPrice: z.coerce.number().int().min(0).optional(),
+    delivery: deliveryModeSchema.optional(),
+    sort: z.enum(['recent', 'price_asc', 'price_desc']).default('recent'),
+    page: z.coerce.number().int().min(1).default(1),
+    limit: z.coerce.number().int().min(1).max(50).default(20),
   })
   .strict();
 

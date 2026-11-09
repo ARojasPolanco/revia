@@ -18,3 +18,19 @@ export const avatarUpload = multer({
     callback(null, true);
   },
 });
+
+export const listingPhotosUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 8 * 1024 * 1024,
+    files: 10,
+  },
+  fileFilter: (_req, file, callback) => {
+    if (!allowedMimeTypes.has(file.mimetype)) {
+      callback(new AppError('Formato de imagen no válido. Usá JPG, PNG o WebP.', 422));
+      return;
+    }
+
+    callback(null, true);
+  },
+});

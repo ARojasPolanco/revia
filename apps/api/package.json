@@ -15,6 +15,7 @@
     "migrate:down": "tsx src/config/migrator.ts down",
     "seed": "tsx src/seeders/seed.ts",
     "seed:dev": "tsx src/seeders/seed.ts",
+    "seed:categories": "tsx src/seeders/categories.ts",
     "seed:admin": "tsx src/seeders/seedAdmin.ts"
   },
   "dependencies": {

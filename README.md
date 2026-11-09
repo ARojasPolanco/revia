@@ -97,20 +97,21 @@ npm run dev:web
 
 ## Scripts previstos
 
-| Comando               | Descripción                                              |
-| --------------------- | -------------------------------------------------------- |
-| `npm run docker:up`   | Levanta PostgreSQL en `localhost:5433`.                  |
-| `npm run docker:down` | Baja los contenedores.                                   |
-| `npm run docker:app`  | Levanta PostgreSQL + API + web en Docker.                |
-| `npm run dev`         | API en desarrollo.                                       |
-| `npm run dev:web`     | Next.js en desarrollo.                                   |
-| `npm run build`       | Build de API y web.                                      |
-| `npm run lint`        | ESLint.                                                  |
-| `npm run test`        | Tests de API.                                            |
-| `npm run test:web`    | Tests de web.                                            |
-| `npm run seed`        | Seed de desarrollo.                                      |
-| `npm run seed:dev`    | Crea usuarios demo para probar las pantallas protegidas. |
-| `npm run seed:admin`  | Crea admin inicial.                                      |
+| Comando                   | Descripción                                              |
+| ------------------------- | -------------------------------------------------------- |
+| `npm run docker:up`       | Levanta PostgreSQL en `localhost:5433`.                  |
+| `npm run docker:down`     | Baja los contenedores.                                   |
+| `npm run docker:app`      | Levanta PostgreSQL + API + web en Docker.                |
+| `npm run dev`             | API en desarrollo.                                       |
+| `npm run dev:web`         | Next.js en desarrollo.                                   |
+| `npm run build`           | Build de API y web.                                      |
+| `npm run lint`            | ESLint.                                                  |
+| `npm run test`            | Tests de API.                                            |
+| `npm run test:web`        | Tests de web.                                            |
+| `npm run seed`            | Seed de desarrollo.                                      |
+| `npm run seed:dev`        | Crea usuarios demo para probar las pantallas protegidas. |
+| `npm run seed:categories` | Siembra la taxonomía de 8 rubros y sus atributos.        |
+| `npm run seed:admin`      | Crea admin inicial.                                      |
 
 Los scripts definitivos se ajustan en la Fase 0.
 
@@ -118,12 +119,12 @@ Los scripts definitivos se ajustan en la Fase 0.
 
 Después de `npm run migrate`, ejecutá `npm run seed:dev`. Contraseña para todos: `revia12345`.
 
-| Email                  | Qué permite probar                                                       |
-| ---------------------- | ------------------------------------------------------------------------ |
-| `demo@revia.test`      | Cuenta verificada sin KYC: `/configuracion` y flujo de `/verificacion`.  |
-| `pendiente@revia.test` | Onboarding pendiente: `/completar-perfil`.                               |
-| `vendedor@revia.test`  | KYC aprobado y perfil verificado simulado: guardar cobro y ver el check. |
-| `admin@revia.test`     | Rol admin (panel admin en Fase 10).                                      |
+| Email                  | Qué permite probar                                                             |
+| ---------------------- | ------------------------------------------------------------------------------ |
+| `demo@revia.test`      | Cuenta verificada sin KYC: `/configuracion` y flujo de `/verificacion`.        |
+| `pendiente@revia.test` | Onboarding pendiente: `/completar-perfil`.                                     |
+| `vendedor@revia.test`  | KYC aprobado y perfil verificado simulado: publicar, gestionar fotos y cobrar. |
+| `admin@revia.test`     | Moderación en `/admin/publicaciones`.                                          |
 
 Los avatares se guardan localmente en `apps/api/uploads/avatars` durante el desarrollo. En producción se migrarán a R2 o Cloudinary.
 

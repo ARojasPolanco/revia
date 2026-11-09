@@ -4,8 +4,8 @@ Tablero vivo del proyecto. Se actualiza al empezar y al terminar cada tarea. Si 
 
 ## Estado actual
 
-- **Fase:** Fase 2 completada en local (KYC con Didit/mock y cuenta de payout cifrada).
-- **Repo:** `REVIA-fullstack`, rama `dev`, con Fase 0 en `main` y Fases 1-2 en `dev`.
+- **Fase:** Fase 3 completada en local (taxonomía, publicaciones, fotos y moderación).
+- **Repo:** `REVIA-fullstack`, rama `dev`, con Fase 0 en `main` y Fases 1-3 en `dev`.
 - **Alcance:** MVP C2C local en Bahía Blanca, ARS, Tasa de REVIA 7% + $500, custodia y payouts manuales.
 - **Documentos creados:** `AGENTS.md`, `TASK.md`, `docs/SPEC.md`, `docs/ARCHITECTURE.md`, `docs/API.md`, `docs/DECISIONS.md`, `README.md`.
 - **Decisiones abiertas:** ninguna. D-026 a D-032 cerradas.
@@ -165,18 +165,30 @@ Tablero vivo del proyecto. Se actualiza al empezar y al terminar cada tarea. Si 
 
 **Objetivo:** publicar artículos con fotos y aprobación previa.
 
-- [ ] Modelos `Category`, `CategoryAttribute`, `Listing`, `ListingPhoto`.
-- [ ] Migraciones y seeds idempotentes de taxonomía (8 rubros).
-- [ ] CRUD de publicaciones con estados.
-- [ ] Upload de fotos (Multer + sharp + R2), mínimo 3.
-- [ ] Validación de campos y atributos por subcategoría (Zod).
-- [ ] Moderación: cola, aprobar, rechazar con motivo, reenviar.
-- [ ] Pausar, reanudar y eliminar (soft delete).
-- [ ] Denuncias de publicaciones.
-- [ ] Páginas `/publicar`, `/mis-publicaciones`, detalle y edición.
-- [ ] Tests de publicación, fotos, estados y moderación.
+- [x] Modelos `Category`, `CategoryAttribute`, `Listing`, `ListingPhoto`, `ListingReport`.
+- [x] Migración `005_listings` y seed idempotente de taxonomía (8 rubros, 35 subcategorías, 126 atributos).
+- [x] CRUD de publicaciones con estados (`draft`, `pending`, `active`, `rejected`, `paused`, `sold`, `deleted`).
+- [x] Upload de fotos (Multer + sharp, mínimo 3, máximo 10, WebP + thumbnail); almacenamiento local en dev, R2 pendiente para producción.
+- [x] Validación de campos y atributos obligatorios por subcategoría.
+- [x] Moderación: cola, aprobar, rechazar con motivo y reenviar.
+- [x] Pausar, reanudar y eliminar (soft delete).
+- [x] Denuncias de publicaciones y resolución por moderación.
+- [x] Páginas `/publicar`, `/mis-publicaciones`, `/mis-publicaciones/[id]`, `/publicaciones`, `/publicaciones/[id]` y `/admin/publicaciones`.
+- [x] Tests de categorías, publicación, fotos, estados, moderación y permisos.
 
 **DoD:** publicación completa con 3 fotos, aprobación, pausa y rechazo con motivo.
+
+## Avance Fase 3 (2026-11-09)
+
+- Taxonomía idempotente de 8 rubros / 35 subcategorías / 126 atributos (`npm run seed:categories`).
+- Modelos y asociaciones de categorías, publicaciones, fotos y denuncias.
+- Flujo completo: `draft` → 3+ fotos → `pending` → `active`, con rechazo y reenvío.
+- Fotos procesadas con `sharp` (1600 px + thumbnail 400 px, WebP) y servidas desde `/uploads`; en desarrollo se guardan localmente.
+- Moderación mínima en `/admin/publicaciones` con aprobar/rechazar y denuncias; el panel admin completo queda para Fase 10.
+- Catálogo público básico y detalle con fotos, atributos, entrega, vendedor y badge verificado.
+- Tests: **47/47**; build, lint y migración `005` down/up en `revia` y `revia_test` verdes.
+- Smoke real: borrador → 3 fotos → `pending` → aprobación → visible en `GET /listings` con 3 fotos.
+- Pendiente para producción: mover fotos de publicaciones a R2/Cloudinary y ampliar filtros de catálogo en Fase 4.
 
 ## Fase 4 — Descubrimiento: búsqueda, feed, follows y favoritos
 

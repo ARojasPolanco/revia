@@ -10,7 +10,15 @@ const baseDir =
 
 export const uploadsDir = baseDir;
 export const avatarsDir = path.join(baseDir, 'avatars');
+export const listingsDir = path.join(baseDir, 'listings');
 
 export function ensureUploadsDir(): void {
   fs.mkdirSync(avatarsDir, { recursive: true });
+  fs.mkdirSync(listingsDir, { recursive: true });
+}
+
+export function ensureListingDir(listingId: string): string {
+  const dir = path.join(listingsDir, listingId);
+  fs.mkdirSync(dir, { recursive: true });
+  return dir;
 }

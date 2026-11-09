@@ -3,6 +3,7 @@ import cors from 'cors';
 import express from 'express';
 import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
+import './config/associations.js';
 import { corsOrigins, envs } from './config/envs.js';
 import { ensureUploadsDir, uploadsDir } from './config/uploads.js';
 import { globalErrorHandler, notFoundHandler } from './errors/errorController.js';

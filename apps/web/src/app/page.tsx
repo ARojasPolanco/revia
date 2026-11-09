@@ -19,15 +19,21 @@ export default function HomePage() {
         <div className="flex flex-wrap gap-3">
           <a
             className="rounded-xl bg-teal-700 px-5 py-3 text-sm font-semibold text-white"
-            href="/ingresar"
+            href="/publicaciones"
           >
-            Ingresar
+            Ver publicaciones
+          </a>
+          <a
+            className="rounded-xl bg-neutral-900 px-5 py-3 text-sm font-semibold text-white"
+            href="/publicar"
+          >
+            Publicar
           </a>
           <a
             className="rounded-xl border border-neutral-300 px-5 py-3 text-sm font-semibold text-neutral-800"
-            href="/registro"
+            href="/ingresar"
           >
-            Crear cuenta
+            Ingresar
           </a>
           <a
             className="rounded-xl border border-neutral-300 px-5 py-3 text-sm font-semibold text-neutral-800"

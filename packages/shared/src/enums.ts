@@ -21,8 +21,35 @@ export const LISTING_CONDITIONS = [
 ] as const;
 export type ListingCondition = (typeof LISTING_CONDITIONS)[number];
 
+export const LISTING_CONDITION_LABELS: Record<ListingCondition, string> = {
+  new_with_tags: 'Nuevo con etiqueta',
+  new_without_tags: 'Nuevo sin etiqueta',
+  very_good: 'Muy bueno',
+  good: 'Bueno',
+  fair: 'Satisfactorio',
+};
+
 export const DELIVERY_MODES = ['pickup_home', 'midpoint', 'home_delivery'] as const;
 export type DeliveryMode = (typeof DELIVERY_MODES)[number];
+
+export const DELIVERY_MODE_LABELS: Record<DeliveryMode, string> = {
+  pickup_home: 'Retiro en el domicilio del vendedor',
+  midpoint: 'Punto medio en el centro',
+  home_delivery: 'Envío coordinado con Uber/Didi',
+};
+
+export const LISTING_STATUS_LABELS: Record<ListingStatus, string> = {
+  draft: 'Borrador',
+  pending: 'Pendiente de aprobación',
+  active: 'Activa',
+  rejected: 'Rechazada',
+  paused: 'Pausada',
+  sold: 'Vendida',
+  deleted: 'Eliminada',
+};
+
+export const CATEGORY_ATTRIBUTE_TYPES = ['text', 'number', 'select', 'boolean'] as const;
+export type CategoryAttributeType = (typeof CATEGORY_ATTRIBUTE_TYPES)[number];
 
 export const OFFER_STATUSES = [
   'pending',
