@@ -331,3 +331,35 @@ Formato: `D-XXX · fecha · estado`. Estados: `aceptada`, `revisar`, `reemplazad
 - Contexto: Talo valida que `webhook_url` sea HTTPS público y rechaza `localhost`.
 - Decisión: en desarrollo no se envía `webhook_url`; el smoke `npm run smoke:fase5-6` simula la transferencia y llama al webhook local. En producción `API_URL` debe ser HTTPS público y el webhook incluye `?token=TALO_WEBHOOK_SECRET`.
 - Consecuencias: el flujo local es reproducible sin túnel; producción requiere dominio y secreto configurados.
+
+## D-042 — 2026-11-10 — aceptada
+
+**Payout creado al completar la orden y orden `completed` hasta el procesamiento.**
+
+- Contexto: el comprador y el vendedor necesitan ver la compra como completada sin esperar a finanzas, y finanzas necesita una cola separada.
+- Decisión: al completar la orden se crea un `Payout` en `pending`; la orden sigue `completed`. Al iniciar procesamiento la orden pasa a `payout_pending` y al pagarse a `paid_out`. Un fallo vuelve la orden a `completed` para reintentar.
+- Consecuencias: la UI de compras no cambia de significado y la cola de finanzas queda independiente.
+
+## D-043 — 2026-11-10 — aceptada
+
+**Bloqueos explícitos y cuenta de cobro enmascarada.**
+
+- Contexto: un payout no puede ejecutarse con datos inválidos, KYC pendiente, disputa o reembolso abierto.
+- Decisión: el payout guarda `block_reason` con códigos (`payout_account_missing`, `holder_mismatch`, `refund_pending`, etc.). La API devuelve solo la cuenta enmascarada; el CBU/CVU/alias completo nunca sale en respuestas.
+- Consecuencias: finanzas ve el motivo del bloqueo y el vendedor puede corregir su cuenta; la transferencia manual se ejecuta con el proceso seguro de finanzas.
+
+## D-044 — 2026-11-10 — aceptada
+
+**SLA de payout en días hábiles.**
+
+- Contexto: la promesa es 48-72 horas hábiles desde `completed`.
+- Decisión: calcular `sla_due_at` sumando tres días hábiles en zona `America/Argentina/Buenos_Aires`, sin fines de semana. No se descuentan feriados en el MVP.
+- Consecuencias: el panel muestra vencimientos realistas; feriados se ajustan manualmente por finanzas.
+
+## D-045 — 2026-11-10 — aceptada
+
+**Conciliación Talo diaria y bajo demanda.**
+
+- Contexto: Talo puede perder o demorar webhooks, y finanzas necesita ver diferencias.
+- Decisión: job diario que revisa pagos de los últimos 7 días y endpoint `POST /admin/payouts/reconcile` para ejecutarlo manualmente. Las diferencias se reprocesan con la misma lógica idempotente de pagos.
+- Consecuencias: menor riesgo de pagos sin conciliar; el endpoint acota a 50 pagos por corrida para no saturar Talo.

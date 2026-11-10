@@ -6,7 +6,7 @@ El dinero queda en custodia de REVIA hasta que el comprador confirma la entrega 
 
 ## Estado
 
-Fases 0-6 implementadas en local: auth, KYC, publicaciones, descubrimiento, ofertas/chat y órdenes con Talo Sandbox. Ver `TASK.md`.
+Fases 0-7 implementadas en local: auth, KYC, publicaciones, descubrimiento, ofertas/chat, órdenes con Talo Sandbox y payouts manuales. Ver `TASK.md`.
 
 ## Stack
 
@@ -114,6 +114,7 @@ npm run dev:web
 | `npm run seed:admin`      | Crea admin inicial.                                      |
 | `npm run talo:smoke`      | Crea y simula un pago de $100 en Talo Sandbox.           |
 | `npm run smoke:fase5-6`   | Flujo real oferta → pago sandbox → entrega → completada. |
+| `npm run smoke:fase7`     | Procesa, paga y descarga un payout pendiente.            |
 
 Los scripts definitivos se ajustan en la Fase 0.
 
@@ -122,6 +123,7 @@ Los scripts definitivos se ajustan en la Fase 0.
 - `npm run test`: API con Vitest + Supertest.
 - `npm run test:web`: componentes Next.js con Vitest + Testing Library.
 - `npm run smoke:fase5-6`: smoke real contra Talo Sandbox (requiere `apps/api/.env` y `npm run seed:dev`).
+- `npm run smoke:fase7`: procesa y paga un payout generado por el smoke anterior.
 
 ## Usuarios demo
 

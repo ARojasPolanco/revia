@@ -1,0 +1,2 @@
+DROP TABLE IF EXISTS payout_events;
+DROP TABLE IF EXISTS payouts;

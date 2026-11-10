@@ -13,6 +13,9 @@ import { OrderEvent } from '../modules/orders/orderEvent.model.js';
 import { Payment } from '../modules/payments/payment.model.js';
 import { PaymentEvent } from '../modules/payments/paymentEvent.model.js';
 import { Refund } from '../modules/payments/refund.model.js';
+import { Payout } from '../modules/payouts/payout.model.js';
+import { PayoutAccount } from '../modules/payouts/payoutAccount.model.js';
+import { PayoutEvent } from '../modules/payouts/payoutEvent.model.js';
 import { User } from '../modules/users/user.model.js';
 import { UserBlock } from '../modules/users/userBlock.model.js';
 import { UserReport } from '../modules/users/userReport.model.js';
@@ -90,6 +93,16 @@ export function setupAssociations(): void {
   Payment.hasMany(Refund, { foreignKey: 'paymentId', as: 'refunds' });
   Refund.belongsTo(Payment, { foreignKey: 'paymentId', as: 'payment' });
   Refund.belongsTo(User, { foreignKey: 'requestedBy', as: 'requester' });
+
+  Order.hasOne(Payout, { foreignKey: 'orderId', as: 'payout' });
+  Payout.belongsTo(Order, { foreignKey: 'orderId', as: 'order' });
+  Payout.belongsTo(User, { foreignKey: 'sellerId', as: 'seller' });
+  Payout.belongsTo(User, { foreignKey: 'processedBy', as: 'processor' });
+  Payout.belongsTo(PayoutAccount, { foreignKey: 'payoutAccountId', as: 'account' });
+  PayoutAccount.hasMany(Payout, { foreignKey: 'payoutAccountId', as: 'payouts' });
+  Payout.hasMany(PayoutEvent, { foreignKey: 'payoutId', as: 'events' });
+  PayoutEvent.belongsTo(Payout, { foreignKey: 'payoutId', as: 'payout' });
+  PayoutEvent.belongsTo(User, { foreignKey: 'actorId', as: 'actor' });
 }
 
 setupAssociations();

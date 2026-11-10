@@ -209,18 +209,60 @@ Reglas:
 
 Estados: `pending_payment`, `payment_review`, `paid`, `handover_pending`, `delivered`, `completed`, `payout_pending`, `paid_out`, `disputed`, `refunded`, `cancelled`, `expired`.
 
-## 9. Payouts
+## 9. Payouts y finanzas
 
-| Método | Ruta                             | Auth         | Descripción                                             |
-| ------ | -------------------------------- | ------------ | ------------------------------------------------------- |
-| GET    | `/me/payout-account`             | usuario      | Datos enmascarados (últimos 4 o alias parcial).         |
-| PUT    | `/me/payout-account`             | vendedor KYC | CBU/CVU (22 dígitos) o alias + titular; se cifra en DB. |
-| GET    | `/me/payouts`                    | vendedor     | Historial y estado.                                     |
-| GET    | `/admin/payouts`                 | finance      | Cola de payouts.                                        |
-| POST   | `/admin/payouts/:id/mark-paid`   | finance      | Marca pagado + comprobante.                             |
-| POST   | `/admin/payouts/:id/mark-failed` | finance      | Marca fallido + motivo.                                 |
+### Vendedor
+
+| Método | Ruta                      | Auth         | Descripción                                             |
+| ------ | ------------------------- | ------------ | ------------------------------------------------------- |
+| GET    | `/me/payout-account`      | usuario      | Datos enmascarados (últimos 4 o alias parcial).         |
+| PUT    | `/me/payout-account`      | vendedor KYC | CBU/CVU (22 dígitos) o alias + titular; se cifra en DB. |
+| GET    | `/me/payouts`             | vendedor     | Historial de payouts con orden, estado y bloqueo.       |
+| GET    | `/me/payouts/summary`     | vendedor     | Pendiente, en proceso, pagado y próxima SLA.            |
+| GET    | `/me/payouts/:id/receipt` | vendedor     | Comprobante descargable si el payout está pagado.       |
+
+### Finanzas
+
+| Método | Ruta                             | Rol           | Descripción                                 |
+| ------ | -------------------------------- | ------------- | ------------------------------------------- |
+| GET    | `/admin/payouts?status=`         | finance/admin | Cola de payouts.                            |
+| GET    | `/admin/payouts/summary`         | finance/admin | Totales, bloqueados y fuera de SLA.         |
+| POST   | `/admin/payouts/:id/processing`  | finance/admin | Pasa a `processing` si no está bloqueado.   |
+| POST   | `/admin/payouts/:id/mark-paid`   | finance/admin | Marca `paid` + `operationId` y comprobante. |
+| POST   | `/admin/payouts/:id/mark-failed` | finance/admin | Marca `failed` + motivo.                    |
+| POST   | `/admin/payouts/reconcile`       | finance/admin | Ejecuta conciliación Talo vs pagos locales. |
+
+`mark-paid` body:
+
+```json
+{
+  "operationId": "OP-123",
+  "receiptUrl": "https://...",
+  "note": "Transferencia manual"
+}
+```
+
+`mark-failed` body:
+
+```json
+{
+  "reason": "Datos bancarios rechazados"
+}
+```
 
 Estados: `pending`, `processing`, `paid`, `failed`.
+
+Bloqueos: `seller_missing`, `seller_unavailable`, `kyc_not_approved`, `dispute_open`, `refund_pending`, `payout_account_missing`, `payout_account_pending_review`, `holder_mismatch`.
+
+Reglas:
+
+- El payout se crea automáticamente al completar la orden.
+- La orden queda `completed` hasta que finanzas inicia el procesamiento; ahí pasa a `payout_pending` y al pagar a `paid_out`.
+- Un payout bloqueado no se puede procesar ni pagar.
+- La cuenta de cobro se devuelve enmascarada; nunca se expone el CBU/CVU/alias completo.
+- Cada acción de finanzas deja un `payout_event` con actor y datos.
+- El comprobante se genera como archivo de texto cuando el payout está pagado.
+- SLA: 48-72 horas hábiles desde `completed`.
 
 ## 10. Disputas
 

@@ -3,6 +3,7 @@ import { sequelize } from './config/database.js';
 import { envs } from './config/envs.js';
 import { logger } from './config/logger.js';
 import { runOrderJobs } from './jobs/orderJobs.js';
+import { runTaloReconciliation } from './jobs/reconciliationJob.js';
 
 const server = app.listen(envs.PORT, () => {
   logger.info(`REVIA API escuchando en ${envs.API_URL}`, {
@@ -17,9 +18,26 @@ const jobsInterval = setInterval(() => {
 jobsInterval.unref();
 void runOrderJobs();
 
+const reconciliationInterval = setInterval(
+  () => {
+    void runTaloReconciliation();
+  },
+  24 * 60 * 60 * 1000
+);
+reconciliationInterval.unref();
+const reconciliationInitial = setTimeout(
+  () => {
+    void runTaloReconciliation();
+  },
+  2 * 60 * 1000
+);
+reconciliationInitial.unref();
+
 async function shutdown(signal: string): Promise<void> {
   logger.info(`Cerrando REVIA API por ${signal}`);
   clearInterval(jobsInterval);
+  clearInterval(reconciliationInterval);
+  clearTimeout(reconciliationInitial);
 
   server.close(() => {
     void sequelize

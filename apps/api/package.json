@@ -18,7 +18,8 @@
     "seed:dev": "tsx src/seeders/seed.ts",
     "seed:categories": "tsx src/seeders/categories.ts",
     "seed:admin": "tsx src/seeders/seedAdmin.ts",
-    "smoke:fase5-6": "tsx src/scripts/fase5-6-smoke.ts"
+    "smoke:fase5-6": "tsx src/scripts/fase5-6-smoke.ts",
+    "smoke:fase7": "tsx src/scripts/payoutSmoke.ts"
   },
   "dependencies": {
     "@revia/shared": "*",

@@ -27,6 +27,7 @@
     "seed:categories": "npm run build:shared && npm run seed:categories -w @revia/api",
     "seed:admin": "npm run build:shared && npm run seed:admin -w @revia/api",
     "smoke:fase5-6": "npm run build:shared && npm run smoke:fase5-6 -w @revia/api",
+    "smoke:fase7": "npm run build:shared && npm run smoke:fase7 -w @revia/api",
     "migrate": "npm run build:shared && npm run migrate -w @revia/api",
     "migrate:down": "npm run build:shared && npm run migrate:down -w @revia/api",
     "talo:smoke": "npm run build:shared && npm run talo:smoke -w @revia/api --",

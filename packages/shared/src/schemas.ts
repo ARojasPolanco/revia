@@ -1,5 +1,11 @@
 import { z } from 'zod';
-import { DELIVERY_MODES, LISTING_CONDITIONS, PAYOUT_METHODS, USER_ROLES } from './enums.js';
+import {
+  DELIVERY_MODES,
+  LISTING_CONDITIONS,
+  PAYOUT_METHODS,
+  PAYOUT_STATUSES,
+  USER_ROLES,
+} from './enums.js';
 
 export const uuidSchema = z.string().uuid();
 
@@ -168,5 +174,25 @@ export const deliveryCodeSchema = z
       .string()
       .trim()
       .regex(/^\d{6}$/, 'El código debe tener 6 dígitos.'),
+  })
+  .strict();
+
+export const payoutPaidSchema = z
+  .object({
+    operationId: z.string().trim().min(3).max(100),
+    receiptUrl: z.string().url().max(500).optional(),
+    note: z.string().trim().max(500).optional(),
+  })
+  .strict();
+
+export const payoutFailedSchema = z
+  .object({
+    reason: z.string().trim().min(5).max(500),
+  })
+  .strict();
+
+export const payoutListQuerySchema = z
+  .object({
+    status: z.enum(PAYOUT_STATUSES).optional(),
   })
   .strict();

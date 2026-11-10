@@ -4,8 +4,8 @@ Tablero vivo del proyecto. Se actualiza al empezar y al terminar cada tarea. Si 
 
 ## Estado actual
 
-- **Fase:** Fase 6 completada en local (órdenes, Talo, pago, entrega y 48 h).
-- **Repo:** `REVIA-fullstack`, rama `dev`, con Fase 0 en `main` y Fases 1-6 en `dev`.
+- **Fase:** Fase 7 completada en local (payouts manuales, finanzas y conciliación).
+- **Repo:** `REVIA-fullstack`, rama `dev`, con Fase 0 en `main` y Fases 1-7 en `dev`.
 - **Alcance:** MVP C2C local en Bahía Blanca, ARS, Tasa de REVIA 7% + $500, custodia y payouts manuales.
 - **Documentos creados:** `AGENTS.md`, `TASK.md`, `docs/SPEC.md`, `docs/ARCHITECTURE.md`, `docs/API.md`, `docs/DECISIONS.md`, `README.md`.
 - **Decisiones abiertas:** ninguna. D-026 a D-036 cerradas.
@@ -157,7 +157,7 @@ Tablero vivo del proyecto. Se actualiza al empezar y al terminar cada tarea. Si 
 - [x] Disparar `seller_verified_at` en la primera orden `completed` (Fase 6).
 - [ ] Migrar avatares a R2 o Cloudinary para producción (el disco de Render es efímero).
 - [x] Historial de compras/ventas y auditoría de la orden (Fase 6).
-- [ ] Comprobante de payout descargable (Fase 7).
+- [x] Comprobante de payout descargable (Fase 7).
 - [x] Errores: body-parser, CORS, Multer, Sequelize y PostgreSQL normalizados; mensajes Zod en español; rate limit global en español.
 - [x] Tests de errores: 404, JSON inválido, 422 con campos obligatorios/email/longitud y 401.
 
@@ -288,18 +288,30 @@ Tablero vivo del proyecto. Se actualiza al empezar y al terminar cada tarea. Si 
 
 **Objetivo:** pagar al vendedor con control y auditoría.
 
-- [ ] Modelo `Payout` y migración.
-- [ ] Cola de payouts para `finance`.
-- [ ] Bloqueo por disputa, reembolso pendiente o datos inválidos.
-- [ ] Marcar `processing`, `paid` y `failed` con comprobante.
-- [ ] Auditoría de acciones de finanzas.
-- [ ] Panel de payout del vendedor con comprobante descargable.
-- [ ] Resumen de ingresos y auditoría de ventas/payouts para el vendedor y para finanzas.
-- [ ] Conteo de SLA 48–72 h hábiles.
-- [ ] Conciliación diaria Talo vs órdenes.
-- [ ] Tests de payout, bloqueos y auditoría.
+- [x] Modelo `Payout` y migración.
+- [x] Cola de payouts para `finance`.
+- [x] Bloqueo por disputa, reembolso pendiente o datos inválidos.
+- [x] Marcar `processing`, `paid` y `failed` con comprobante.
+- [x] Auditoría de acciones de finanzas.
+- [x] Panel de payout del vendedor con comprobante descargable.
+- [x] Resumen de ingresos y auditoría de ventas/payouts para el vendedor y para finanzas.
+- [x] Conteo de SLA 48–72 h hábiles.
+- [x] Conciliación diaria Talo vs órdenes.
+- [x] Tests de payout, bloqueos y auditoría.
 
 **DoD:** payout completo con comprobante, bloqueos y trazabilidad.
+
+## Avance Fase 7 (2026-11-10)
+
+- Migración `009_payouts`: `payouts` y `payout_events` con estados, SLA, operación y auditoría.
+- Payout automático al completar la orden; orden `completed` → `payout_pending` al procesar → `paid_out` al pagar.
+- Bloqueos por KYC, cuenta faltante/en revisión, titular distinto, disputa o reembolso pendiente.
+- Cola de finanzas con filtros, procesamiento, pago con `operationId`, fallo con motivo y reintento.
+- Panel del vendedor `/cobros` con resumen, estados, SLA y comprobante descargable.
+- Resumen y auditoría de payouts para vendedor y finanzas; cuenta de cobro siempre enmascarada.
+- Conciliación Talo diaria + ejecución manual desde finanzas.
+- Tests: **71 API + 13 web**; build/lint verdes; migración `009` down/up verificada.
+- Smoke real: `npm run smoke:fase7` procesa, paga y descarga el comprobante.
 
 ## Fase 8 — Disputas, reembolsos, cupones y reseñas
 

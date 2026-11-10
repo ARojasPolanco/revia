@@ -24,6 +24,10 @@ function notificationHref(notification: NotificationItem): string {
     return listingId ? '/mis-publicaciones' : '/mis-publicaciones';
   }
 
+  if (notification.type.startsWith('payout_')) {
+    return '/cobros';
+  }
+
   if (
     notification.type.startsWith('payment_') ||
     notification.type.startsWith('order_') ||

@@ -11,6 +11,7 @@ import { Offer } from '../modules/offers/offer.model.js';
 import { Order } from '../modules/orders/order.model.js';
 import { completeDeliveredOrders } from '../modules/orders/orders.service.js';
 import { Payment } from '../modules/payments/payment.model.js';
+import { Payout } from '../modules/payouts/payout.model.js';
 import { PaymentEvent } from '../modules/payments/paymentEvent.model.js';
 import { expirePendingPayments } from '../modules/payments/payments.service.js';
 import { User } from '../modules/users/user.model.js';
@@ -216,7 +217,7 @@ beforeAll(async () => {
 
 beforeEach(async () => {
   await sequelize.query(
-    'TRUNCATE TABLE refunds, payment_events, payments, delivery_codes, order_events, orders, notifications, messages, conversations, offers, user_reports, user_blocks, favorites, follows, listing_reports, listing_photos, listings, payout_accounts, kyc_verifications, password_reset_tokens, email_verification_tokens, auth_identities, users RESTART IDENTITY CASCADE'
+    'TRUNCATE TABLE payout_events, payouts, refunds, payment_events, payments, delivery_codes, order_events, orders, notifications, messages, conversations, offers, user_reports, user_blocks, favorites, follows, listing_reports, listing_photos, listings, payout_accounts, kyc_verifications, password_reset_tokens, email_verification_tokens, auth_identities, users RESTART IDENTITY CASCADE'
   );
   taloPayments.clear();
   taloMock.createTaloPayment.mockImplementation(
@@ -337,6 +338,9 @@ describe('órdenes, pago y entrega', () => {
     expect(confirmed.status).toBe(200);
     expect(confirmed.body.order.status).toBe('completed');
     expect(confirmed.body.order.completedAt).toBeTruthy();
+
+    const payout = await Payout.findOne({ where: { orderId: created.body.order.id } });
+    expect(payout?.status).toBe('pending');
   });
 
   it('usa el monto de la oferta aceptada y rechaza ofertas vencidas', async () => {

@@ -7,6 +7,7 @@ import { AppError } from '../../errors/appError.js';
 import { hashToken } from '../../utils/tokens.js';
 import { toPublicUser, type PublicUser } from '../auth/auth.service.js';
 import { createNotification } from '../notifications/notifications.service.js';
+import { ensurePayoutForOrder } from '../payouts/payoutRecords.service.js';
 import { Listing } from '../listings/listing.model.js';
 import { ListingPhoto } from '../listings/listingPhoto.model.js';
 import { Offer } from '../offers/offer.model.js';
@@ -584,6 +585,8 @@ async function completeOrder(
     );
 
     const sellerJustVerified = await verifySellerFirstSale(order.sellerId, order.id, transaction);
+
+    await ensurePayoutForOrder(order, transaction);
 
     return { order, sellerJustVerified };
   });

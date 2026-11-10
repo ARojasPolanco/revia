@@ -107,9 +107,16 @@ function ModerationContent() {
             Aprobá o rechazá publicaciones pendientes y revisá denuncias.
           </p>
         </div>
-        <Link className="text-sm font-semibold text-teal-700" href="/">
-          Inicio
-        </Link>
+        <div className="flex gap-3">
+          {user?.role === 'admin' ? (
+            <Link className="text-sm font-semibold text-teal-700" href="/admin/finanzas">
+              Finanzas
+            </Link>
+          ) : null}
+          <Link className="text-sm font-semibold text-teal-700" href="/">
+            Inicio
+          </Link>
+        </div>
       </header>
 
       {loading ? <p className="text-sm text-neutral-500">Cargando…</p> : null}

@@ -128,6 +128,44 @@ export type DisputeStatus = (typeof DISPUTE_STATUSES)[number];
 export const PAYOUT_STATUSES = ['pending', 'processing', 'paid', 'failed'] as const;
 export type PayoutStatus = (typeof PAYOUT_STATUSES)[number];
 
+export const PAYOUT_STATUS_LABELS: Record<PayoutStatus, string> = {
+  pending: 'Pendiente',
+  processing: 'En proceso',
+  paid: 'Pagado',
+  failed: 'Falló',
+};
+
+export const PAYOUT_BLOCK_REASONS = [
+  'seller_missing',
+  'seller_unavailable',
+  'kyc_not_approved',
+  'dispute_open',
+  'refund_pending',
+  'payout_account_missing',
+  'payout_account_pending_review',
+  'holder_mismatch',
+] as const;
+export type PayoutBlockReason = (typeof PAYOUT_BLOCK_REASONS)[number];
+
+export const PAYOUT_BLOCK_REASON_LABELS: Record<PayoutBlockReason, string> = {
+  seller_missing: 'No encontramos al vendedor.',
+  seller_unavailable: 'La cuenta del vendedor no está disponible.',
+  kyc_not_approved: 'La verificación de identidad del vendedor no está aprobada.',
+  dispute_open: 'Hay una disputa abierta.',
+  refund_pending: 'Hay un reembolso pendiente.',
+  payout_account_missing: 'El vendedor no configuró su cuenta de cobro.',
+  payout_account_pending_review: 'La cuenta de cobro está en revisión.',
+  holder_mismatch: 'El titular de la cuenta no coincide con la identidad verificada.',
+};
+
+export const PAYOUT_EVENT_LABELS: Record<string, string> = {
+  payout_created: 'Payout creado',
+  payout_blocked: 'Payout bloqueado',
+  payout_processing: 'Payout en proceso',
+  payout_paid: 'Payout pagado',
+  payout_failed: 'Payout fallido',
+};
+
 export const KYC_STATUSES = [
   'not_started',
   'pending',
@@ -163,6 +201,8 @@ export const NOTIFICATION_TYPES = [
   'seller_verified',
   'claim_window_reminder',
   'order_completed',
+  'payout_processing',
+  'payout_failed',
   'payout_sent',
   'dispute_opened',
   'dispute_updated',

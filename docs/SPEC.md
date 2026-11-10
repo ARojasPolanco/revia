@@ -258,6 +258,8 @@ Reglas del cupón:
 - Finanzas marca el payout como pagado y adjunta comprobante/ID de operación.
 - Un payout se bloquea si hay disputa abierta, reembolso pendiente o datos inválidos.
 - El vendedor ve el estado en su panel: `pending`, `processing`, `paid`, `failed`.
+- El payout se crea automáticamente al completar la orden. La orden pasa a `payout_pending` cuando finanzas inicia el procesamiento y a `paid_out` cuando se paga.
+- La cuenta de cobro se muestra enmascarada y cada acción de finanzas queda auditada.
 
 ## 11. KYC (verificación de identidad)
 

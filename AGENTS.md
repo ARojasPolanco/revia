@@ -14,8 +14,8 @@ La especificación completa está en `docs/SPEC.md`.
 
 ## 2. Estado del repositorio
 
-- Fase actual: **Fases 1-6 completadas en local**. La siguiente es la Fase 7 (payouts manuales y finanzas).
-- El repositorio tiene Fase 0 en `main` y Fases 1-6 en `dev`.
+- Fase actual: **Fases 1-7 completadas en local**. La siguiente es la Fase 8 (disputas, reembolsos, cupones y reseñas).
+- El repositorio tiene Fase 0 en `main` y Fases 1-7 en `dev`.
 - No hay credenciales, claves ni secretos versionados.
 - Toda decisión de producto y técnica se registra en `docs/DECISIONS.md`.
 - El código se construye por fases según `TASK.md`.
@@ -380,6 +380,7 @@ npm run seed:admin       # crea admin inicial
 npm run migrate:down     # baja la última migración
 npm run talo:smoke       # pago de $100 en Talo Sandbox
 npm run smoke:fase5-6    # oferta → pago sandbox → entrega → completada
+npm run smoke:fase7      # procesa, paga y descarga un payout
 ```
 
 Los comandos definitivos se ajustan en la Fase 0.

@@ -354,3 +354,15 @@ Se reutilizan patrones y módulos, adaptados a TypeScript:
 - Primera venta completada setea `seller_verified_at`.
 - UI: checkout en el detalle de publicación, `/compras`, `/compras/[id]`, `/ventas`, `/ventas/[id]`, instrucciones CVU/alias/QR, código de entrega y timeline.
 - Smoke real: `npm run smoke:fase5-6` recorre oferta aceptada, pago sandbox, webhook, código, entrega y orden completada.
+
+## 17. Fase 7 implementada (2026-11-10)
+
+- Migración `009_payouts`: `payouts` y `payout_events`, con `order_id` único, estados `pending/processing/paid/failed`, SLA, operación, comprobante y auditoría.
+- El payout se crea automáticamente al completar la orden. La orden queda `completed`; al iniciar el procesamiento pasa a `payout_pending` y al pagarse a `paid_out`.
+- Bloqueos: vendedor ausente/eliminado, KYC no aprobado, disputa abierta, reembolso pendiente, cuenta de cobro faltante, cuenta en revisión o titular distinto.
+- La cuenta de cobro se guarda cifrada y la API solo devuelve versión enmascarada.
+- Finanzas (`finance`/`admin`) procesa, paga con `operationId` o marca fallido con motivo. Cada acción deja `payout_events`.
+- Vendedor: `/cobros` con resumen, estados, bloqueos, SLA y comprobante descargable. Finanzas: `/admin/finanzas` con cola, filtros, bloqueos, SLA y conciliación.
+- Conciliación Talo: job diario + ejecución manual desde finanzas; compara pagos locales vs Talo y reprocesa diferencias de forma idempotente.
+- SLA: tres días hábiles desde `completed` (48-72 h hábiles), calculado en zona ART.
+- Smoke: `npm run smoke:fase7` procesa y paga el payout pendiente, y descarga el comprobante.
