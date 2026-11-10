@@ -91,9 +91,9 @@ interface DemoListing {
 
 const demoListings: DemoListing[] = [
   {
-    title: 'Campera de abrigo azul',
+    title: 'Campera de abrigo negra',
     description:
-      'Campera de abrigo azul, talle M, en muy buen estado. Ideal para el invierno de Bahía Blanca.',
+      'Campera de abrigo negra, talle M, en muy buen estado. Ideal para el invierno de Bahía Blanca.',
     categorySlug: 'moda-mujer',
     condition: 'very_good',
     priceArs: 18_000,
@@ -102,43 +102,44 @@ const demoListings: DemoListing[] = [
     attributes: {
       size: 'M',
       brand: 'Demo',
-      color: 'Azul',
+      color: 'Negro',
       gender: 'Mujer',
     },
     photoUrls: ['/1.jpeg', '/2.jpeg', '/3.jpg'],
   },
   {
-    title: 'Celular Android libre',
+    title: 'Campera puffer gris',
     description:
-      'Celular Android libre de fábrica, con cargador original y funda. Funciona perfecto.',
-    categorySlug: 'electronica-celulares',
+      'Campera puffer gris, talle L, abrigada y liviana. En buen estado, sin roturas ni manchas.',
+    categorySlug: 'moda-hombre',
     condition: 'good',
-    priceArs: 120_000,
+    priceArs: 25_000,
     deliveryModes: ['pickup_home'],
     location: 'Bahía Blanca',
     attributes: {
-      brand: 'Samsung',
-      model: 'Galaxy A54',
-      warranty: false,
-      accessories: 'Cargador original y funda',
+      size: 'L',
+      brand: 'Demo',
+      color: 'Gris',
+      gender: 'Hombre',
     },
     photoUrls: ['/2.jpeg', '/3.jpg'],
   },
   {
-    title: 'Bicicleta rodado 29',
+    title: 'Campera de cuero negra',
     description:
-      'Bicicleta rodado 29, mountain bike, en muy buen estado. Recién service y lista para andar.',
-    categorySlug: 'deportes-bicicletas',
+      'Campera de cuero negra, talle M, en muy buen estado. Un clásico que combina con todo.',
+    categorySlug: 'moda-unisex',
     condition: 'very_good',
-    priceArs: 250_000,
+    priceArs: 32_000,
     deliveryModes: ['midpoint'],
     location: 'Bahía Blanca',
     attributes: {
-      type: 'Mountain bike',
       size: 'M',
       brand: 'Demo',
+      color: 'Negro',
+      gender: 'Unisex',
     },
-    photoUrls: ['/3.jpg'],
+    photoUrls: ['/3.jpg', '/1.jpeg'],
   },
 ];
 

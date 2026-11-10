@@ -11,8 +11,8 @@ export function ListingCard({ listing }: { listing: Listing }) {
         <ZoomableImage
           src={cover}
           alt={listing.title}
-          wrapperClassName="block aspect-[4/3] w-full overflow-hidden bg-neutral-100"
-          className="h-full w-full object-cover transition group-hover:opacity-95"
+          wrapperClassName="flex aspect-[4/3] w-full items-center justify-center overflow-hidden bg-neutral-50 p-3"
+          className="max-h-full max-w-full object-contain transition group-hover:opacity-95"
         />
       ) : (
         <div className="flex aspect-[4/3] w-full items-center justify-center bg-neutral-100 text-sm text-neutral-400">
