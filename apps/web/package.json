@@ -13,6 +13,7 @@
   "dependencies": {
     "@revia/shared": "*",
     "next": "^15.1.6",
+    "qrcode": "^1.5.4",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "zod": "^3.24.1"
@@ -23,6 +24,7 @@
     "@testing-library/react": "^16.3.3",
     "@testing-library/user-event": "^14.6.8",
     "@types/node": "^22.10.2",
+    "@types/qrcode": "^1.5.6",
     "@types/react": "^19.0.2",
     "@types/react-dom": "^19.0.2",
     "@vitejs/plugin-react": "^6.3.0",

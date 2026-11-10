@@ -9,6 +9,8 @@ import type { NotificationItem } from '@/lib/notifications';
 function notificationHref(notification: NotificationItem): string {
   const conversationId = notification.data.conversationId;
   const listingId = notification.data.listingId;
+  const orderId = notification.data.orderId;
+  const role = notification.data.role;
 
   if (notification.type === 'new_message' && typeof conversationId === 'string') {
     return `/chat/${conversationId}`;
@@ -20,6 +22,16 @@ function notificationHref(notification: NotificationItem): string {
 
   if (notification.type.startsWith('listing_')) {
     return listingId ? '/mis-publicaciones' : '/mis-publicaciones';
+  }
+
+  if (
+    notification.type.startsWith('payment_') ||
+    notification.type.startsWith('order_') ||
+    notification.type.startsWith('delivery_') ||
+    notification.type.startsWith('seller_')
+  ) {
+    const base = role === 'seller' ? '/ventas' : '/compras';
+    return typeof orderId === 'string' ? `${base}/${orderId}` : base;
   }
 
   if (notification.type.startsWith('kyc_')) {

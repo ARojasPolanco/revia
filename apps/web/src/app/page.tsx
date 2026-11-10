@@ -53,6 +53,8 @@ export default function HomePage() {
 
         <nav className="flex flex-wrap gap-4 text-sm font-semibold text-teal-700">
           <a href="/ofertas">Ofertas</a>
+          <a href="/compras">Compras</a>
+          <a href="/ventas">Ventas</a>
           <a href="/chat">Chat</a>
           <a href="/notificaciones">Notificaciones</a>
         </nav>

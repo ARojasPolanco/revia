@@ -291,3 +291,43 @@ Formato: `D-XXX · fecha · estado`. Estados: `aceptada`, `revisar`, `reemplazad
 - Contexto: sin logística integrada, el chat es el canal para coordinar la entrega.
 - Decisión: polling cada 4 s, conversación por publicación/comprador/vendedor, filtro de contacto que advierte y marca, y notificaciones persistidas en `notifications`. El push queda para la Fase 9.
 - Consecuencias: operación simple y compatible con Render free; el polling se puede migrar a SSE/WebSocket si crece.
+
+## D-037 — 2026-11-10 — aceptada
+
+**Talo con URLs fijas y credenciales `client_id`/`client_secret`.**
+
+- Contexto: el panel de Talo no muestra una “API URL”; las credenciales no son una API key.
+- Decisión: usar `https://sandbox-api.talo.com.ar` en desarrollo y `https://api.talo.com.ar` en producción. El token se obtiene con `POST /users/{user_id}/tokens` y `client_id`/`client_secret`; el pago se crea con `user_id` en el body.
+- Consecuencias: configuración explícita en `apps/api/.env`; `TALO_API_URL` ya no debe apuntar a producción en desarrollo.
+
+## D-038 — 2026-11-10 — aceptada
+
+**Estado `payment_review` para pagos que no coinciden.**
+
+- Contexto: Talo puede devolver `OVERPAID`/`UNDERPAID` o el artículo puede dejar de estar disponible al acreditarse el pago.
+- Decisión: agregar `payment_review` a los estados de orden. La orden queda retenida, no se emite código ni se marca la publicación como vendida, y finanzas la resuelve manualmente.
+- Consecuencias: evita liberar entregas con montos incorrectos o doble venta; requiere una cola de revisión en Fase 7.
+
+## D-039 — 2026-11-10 — aceptada
+
+**Confirmación del comprador completa la orden.**
+
+- Contexto: el botón “Recibí el artículo” debe liberar el pago sin esperar 48 h.
+- Decisión: `POST /me/orders/:id/confirm-receipt` marca `delivered` y `completed` en la misma transacción, setea `completed_at` y habilita el payout pendiente. El código del vendedor sigue marcando `delivered` y deja correr las 48 h.
+- Consecuencias: el comprador puede cerrar la compra antes; la ventana de reclamo solo aplica al flujo de código.
+
+## D-040 — 2026-11-10 — aceptada
+
+**Código de entrega cifrado y bloqueo de doble venta.**
+
+- Contexto: el código es un secreto de autorización y dos compradores podrían pagar la misma publicación.
+- Decisión: guardar `code_hash` SHA-256 y `code_encrypted` AES-256-GCM; el comprador puede recuperarlo desde la API. Índices únicos parciales impiden más de una orden activa por publicación y más de una compra activa por comprador/publicación.
+- Consecuencias: el código no se guarda en texto plano y la carrera de doble pago se resuelve con `payment_review`.
+
+## D-041 — 2026-11-10 — aceptada
+
+**Webhook local manual y webhook público en producción.**
+
+- Contexto: Talo valida que `webhook_url` sea HTTPS público y rechaza `localhost`.
+- Decisión: en desarrollo no se envía `webhook_url`; el smoke `npm run smoke:fase5-6` simula la transferencia y llama al webhook local. En producción `API_URL` debe ser HTTPS público y el webhook incluye `?token=TALO_WEBHOOK_SECRET`.
+- Consecuencias: el flujo local es reproducible sin túnel; producción requiere dominio y secreto configurados.

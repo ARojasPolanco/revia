@@ -1,0 +1,6 @@
+DROP TABLE IF EXISTS refunds;
+DROP TABLE IF EXISTS payment_events;
+DROP TABLE IF EXISTS payments;
+DROP TABLE IF EXISTS delivery_codes;
+DROP TABLE IF EXISTS order_events;
+DROP TABLE IF EXISTS orders;

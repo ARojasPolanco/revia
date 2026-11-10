@@ -15,6 +15,7 @@ import {
   type Category,
   type Listing,
 } from '@/lib/listings';
+import type { Order, OrderQuote } from '@/lib/orders';
 
 export default function ListingDetailPage() {
   const params = useParams<{ id: string }>();
@@ -34,6 +35,14 @@ export default function ListingDetailPage() {
   const [offerError, setOfferError] = useState<string | null>(null);
   const [offerMessage, setOfferMessage] = useState<string | null>(null);
   const [chatStarting, setChatStarting] = useState(false);
+  const [checkoutOpen, setCheckoutOpen] = useState(false);
+  const [deliveryMode, setDeliveryMode] = useState('');
+  const [offerId, setOfferId] = useState<string | null>(null);
+  const [quote, setQuote] = useState<OrderQuote | null>(null);
+  const [quoteError, setQuoteError] = useState<string | null>(null);
+  const [quoteLoading, setQuoteLoading] = useState(false);
+  const [orderCreating, setOrderCreating] = useState(false);
+  const [orderError, setOrderError] = useState<string | null>(null);
 
   useEffect(() => {
     const id = typeof params.id === 'string' ? params.id : '';
@@ -63,6 +72,45 @@ export default function ListingDetailPage() {
       .then((data) => setIsFavorite(data.favorite))
       .catch(() => setIsFavorite(false));
   }, [user, listing]);
+
+  useEffect(() => {
+    const id = new URLSearchParams(window.location.search).get('offerId');
+
+    if (id) {
+      setOfferId(id);
+      setCheckoutOpen(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (listing && !deliveryMode) {
+      setDeliveryMode(listing.deliveryModes[0] ?? '');
+    }
+  }, [listing, deliveryMode]);
+
+  useEffect(() => {
+    if (!checkoutOpen || !listing || !deliveryMode) {
+      return;
+    }
+
+    setQuoteLoading(true);
+    setQuoteError(null);
+    setQuote(null);
+
+    apiFetch<{ quote: OrderQuote }>('/orders/quote', {
+      method: 'POST',
+      body: JSON.stringify({
+        listingId: listing.id,
+        offerId: offerId ?? undefined,
+        deliveryMode,
+      }),
+    })
+      .then((data) => setQuote(data.quote))
+      .catch((caught) =>
+        setQuoteError(caught instanceof ApiError ? caught.message : 'No pudimos calcular el total.')
+      )
+      .finally(() => setQuoteLoading(false));
+  }, [checkoutOpen, listing, deliveryMode, offerId]);
 
   async function toggleFavorite() {
     if (!listing) {
@@ -181,6 +229,32 @@ export default function ListingDetailPage() {
     }
   }
 
+  async function confirmPurchase() {
+    if (!listing || !deliveryMode) {
+      return;
+    }
+
+    setOrderCreating(true);
+    setOrderError(null);
+
+    try {
+      const data = await apiFetch<{ order: Order; paymentError: string | null }>('/orders', {
+        method: 'POST',
+        body: JSON.stringify({
+          listingId: listing.id,
+          offerId: offerId ?? undefined,
+          deliveryMode,
+        }),
+      });
+
+      router.push(`/compras/${data.order.id}`);
+    } catch (caught) {
+      setOrderError(caught instanceof ApiError ? caught.message : 'No se pudo iniciar la compra.');
+    } finally {
+      setOrderCreating(false);
+    }
+  }
+
   if (loading) {
     return (
       <main className="mx-auto flex min-h-screen w-full max-w-4xl items-center justify-center px-5">
@@ -284,13 +358,106 @@ export default function ListingDetailPage() {
             </p>
 
             <div className="mt-4 flex flex-col gap-2">
-              <button
-                className="w-full cursor-not-allowed rounded-xl bg-neutral-200 px-4 py-3 text-sm font-semibold text-neutral-500"
-                type="button"
-                disabled
-              >
-                Comprar (disponible en la próxima fase)
-              </button>
+              {user && listing.seller?.id !== user.id && listing.status === 'active' ? (
+                <button
+                  className="w-full rounded-xl bg-teal-700 px-4 py-3 text-sm font-semibold text-white disabled:opacity-60"
+                  type="button"
+                  onClick={() => setCheckoutOpen((value) => !value)}
+                >
+                  {checkoutOpen ? 'Cerrar checkout' : 'Comprar'}
+                </button>
+              ) : null}
+
+              {checkoutOpen && user && listing.seller?.id !== user.id ? (
+                <section className="flex flex-col gap-3 rounded-xl border border-teal-200 bg-teal-50 p-3">
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-wide text-teal-900">
+                      Checkout
+                    </p>
+                    {offerId ? (
+                      <p className="mt-1 text-xs text-teal-900">
+                        Estás comprando con una oferta aceptada.
+                      </p>
+                    ) : null}
+                  </div>
+
+                  <label className="text-xs font-semibold text-neutral-700" htmlFor="delivery-mode">
+                    Modalidad de entrega
+                  </label>
+                  <select
+                    id="delivery-mode"
+                    className="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm outline-none focus:border-teal-600"
+                    value={deliveryMode}
+                    onChange={(event) => setDeliveryMode(event.target.value)}
+                  >
+                    {listing.deliveryModes.map((mode) => (
+                      <option key={mode} value={mode}>
+                        {DELIVERY_LABELS[mode] ?? mode}
+                      </option>
+                    ))}
+                  </select>
+
+                  {quoteLoading ? (
+                    <p className="text-xs text-neutral-500">Calculando total.</p>
+                  ) : null}
+
+                  {quoteError ? (
+                    <div className="rounded-lg border border-red-200 bg-red-50 p-2 text-xs text-red-700">
+                      <p>{quoteError}</p>
+                      {offerId ? (
+                        <button
+                          className="mt-1 font-semibold underline"
+                          type="button"
+                          onClick={() => setOfferId(null)}
+                        >
+                          Comprar al precio publicado
+                        </button>
+                      ) : null}
+                    </div>
+                  ) : null}
+
+                  {quote ? (
+                    <>
+                      <dl className="flex flex-col gap-1 text-xs text-neutral-700">
+                        <div className="flex justify-between gap-3">
+                          <dt>Artículo</dt>
+                          <dd>{formatArs(quote.itemPriceArs)}</dd>
+                        </div>
+                        {quote.midpointFeeArs > 0 ? (
+                          <div className="flex justify-between gap-3">
+                            <dt>Punto medio</dt>
+                            <dd>{formatArs(quote.midpointFeeArs)}</dd>
+                          </div>
+                        ) : null}
+                        <div className="flex justify-between gap-3">
+                          <dt>Tasa de REVIA</dt>
+                          <dd>{formatArs(quote.tasaAmountArs)}</dd>
+                        </div>
+                        <div className="flex justify-between gap-3 border-t border-teal-200 pt-1 text-sm font-black text-teal-950">
+                          <dt>Total</dt>
+                          <dd>{formatArs(quote.totalAmountArs)}</dd>
+                        </div>
+                      </dl>
+
+                      <button
+                        className="rounded-lg bg-teal-700 px-3 py-2 text-xs font-semibold text-white disabled:opacity-60"
+                        type="button"
+                        onClick={() => void confirmPurchase()}
+                        disabled={orderCreating}
+                      >
+                        {orderCreating ? 'Iniciando compra.' : 'Confirmar compra'}
+                      </button>
+                    </>
+                  ) : null}
+
+                  {orderError ? (
+                    <p className="rounded-lg border border-red-200 bg-red-50 px-2 py-1.5 text-xs text-red-700">
+                      {orderError}
+                    </p>
+                  ) : null}
+                </section>
+              ) : null}
+
               <button
                 className="w-full rounded-xl border border-teal-700 px-4 py-3 text-sm font-semibold text-teal-700 disabled:opacity-60"
                 type="button"
@@ -373,7 +540,7 @@ export default function ListingDetailPage() {
                   className="w-full rounded-xl border border-neutral-300 px-4 py-3 text-center text-sm font-semibold text-neutral-800"
                   href="/ingresar"
                 >
-                  Ingresá para ofertar o contactar
+                  Ingresá para comprar, ofertar o contactar
                 </Link>
               ) : null}
 

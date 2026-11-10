@@ -7,6 +7,12 @@ import { ListingPhoto } from '../modules/listings/listingPhoto.model.js';
 import { ListingReport } from '../modules/listings/listingReport.model.js';
 import { Notification } from '../modules/notifications/notification.model.js';
 import { Offer } from '../modules/offers/offer.model.js';
+import { DeliveryCode } from '../modules/orders/deliveryCode.model.js';
+import { Order } from '../modules/orders/order.model.js';
+import { OrderEvent } from '../modules/orders/orderEvent.model.js';
+import { Payment } from '../modules/payments/payment.model.js';
+import { PaymentEvent } from '../modules/payments/paymentEvent.model.js';
+import { Refund } from '../modules/payments/refund.model.js';
 import { User } from '../modules/users/user.model.js';
 import { UserBlock } from '../modules/users/userBlock.model.js';
 import { UserReport } from '../modules/users/userReport.model.js';
@@ -58,6 +64,32 @@ export function setupAssociations(): void {
   UserBlock.belongsTo(User, { foreignKey: 'blockedId', as: 'blocked' });
   UserReport.belongsTo(User, { foreignKey: 'reporterId', as: 'reporter' });
   UserReport.belongsTo(User, { foreignKey: 'reportedId', as: 'reported' });
+
+  Order.belongsTo(User, { foreignKey: 'buyerId', as: 'buyer' });
+  Order.belongsTo(User, { foreignKey: 'sellerId', as: 'seller' });
+  Order.belongsTo(Listing, { foreignKey: 'listingId', as: 'listing' });
+  Order.belongsTo(Offer, { foreignKey: 'offerId', as: 'offer' });
+  User.hasMany(Order, { foreignKey: 'buyerId', as: 'purchases' });
+  User.hasMany(Order, { foreignKey: 'sellerId', as: 'sales' });
+  Listing.hasMany(Order, { foreignKey: 'listingId', as: 'orders' });
+
+  Order.hasMany(OrderEvent, { foreignKey: 'orderId', as: 'events' });
+  OrderEvent.belongsTo(Order, { foreignKey: 'orderId', as: 'order' });
+  OrderEvent.belongsTo(User, { foreignKey: 'actorId', as: 'actor' });
+
+  Order.hasOne(DeliveryCode, { foreignKey: 'orderId', as: 'deliveryCode' });
+  DeliveryCode.belongsTo(Order, { foreignKey: 'orderId', as: 'order' });
+
+  Order.hasOne(Payment, { foreignKey: 'orderId', as: 'payment' });
+  Payment.belongsTo(Order, { foreignKey: 'orderId', as: 'order' });
+  Payment.hasMany(PaymentEvent, { foreignKey: 'paymentId', as: 'events' });
+  PaymentEvent.belongsTo(Payment, { foreignKey: 'paymentId', as: 'payment' });
+
+  Order.hasMany(Refund, { foreignKey: 'orderId', as: 'refunds' });
+  Refund.belongsTo(Order, { foreignKey: 'orderId', as: 'order' });
+  Payment.hasMany(Refund, { foreignKey: 'paymentId', as: 'refunds' });
+  Refund.belongsTo(Payment, { foreignKey: 'paymentId', as: 'payment' });
+  Refund.belongsTo(User, { foreignKey: 'requestedBy', as: 'requester' });
 }
 
 setupAssociations();

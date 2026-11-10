@@ -186,7 +186,7 @@ Estados de oferta: `pending`, `accepted`, `rejected`, `countered`, `expired`, `c
 - Al confirmarse el pago, se genera un **código de 6 dígitos** visible para el comprador.
 - En la entrega presencial, el comprador se lo da al vendedor, que lo ingresa en la app para marcar la orden como `delivered`.
 - En envío por Uber/Didi, el comprador comparte el código con el vendedor cuando recibe el artículo; el vendedor lo ingresa.
-- El comprador también puede confirmar antes con el botón "Recibí el artículo", lo que marca la orden como `delivered`.
+- El comprador también puede confirmar antes con el botón "Recibí el artículo", lo que completa la orden directamente.
 - Un código solo puede usarse una vez y vence con la orden.
 
 ### 8.3 Ventana de 48 horas
@@ -390,6 +390,7 @@ No se permite publicar:
 
 ```
 pending_payment
+   ├─ payment_review (OVERPAID/UNDERPAID o publicación no disponible)
    ├─ paid → handover_pending → delivered → completed → payout_pending → paid_out
    ├─ disputed (desde delivered o handover_pending)
    ├─ refunded
@@ -400,6 +401,7 @@ pending_payment
 Reglas:
 
 - `completed` solo cuando pasan 48 horas desde `delivered` sin disputa, o cuando el comprador confirma.
+- `payment_review` retiene la orden si el pago no coincide o la publicación ya no está disponible; finanzas lo resuelve manualmente.
 - `payout_pending` se habilita con `completed`.
 - `paid_out` lo marca finanzas.
 - `disputed` congela el payout y habilita la resolución.

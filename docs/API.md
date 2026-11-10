@@ -138,30 +138,35 @@ Reglas:
 - Cada oferta/contraoferta notifica al destinatario en el centro in-app.
 - La oferta aceptada queda lista para el checkout de la Fase 6.
 
-## 8. Órdenes
+## 8. Órdenes y pagos
 
-| Método | Ruta                        | Auth               | Descripción                                         |
-| ------ | --------------------------- | ------------------ | --------------------------------------------------- |
-| POST   | `/orders`                   | usuario            | Crea orden desde publicación u oferta aceptada.     |
-| GET    | `/orders/:id`               | comprador/vendedor | Detalle con desglose y estado.                      |
-| GET    | `/orders`                   | usuario            | `?role=buyer                                        | seller&status=`. |
-| POST   | `/orders/:id/payment`       | comprador          | Crea/reutiliza pago Talo. Devuelve CVU/alias/QR.    |
-| GET    | `/orders/:id/payment`       | comprador          | Estado del pago.                                    |
-| POST   | `/orders/:id/delivery-code` | vendedor           | Valida código de 6 dígitos y marca `delivered`.     |
-| POST   | `/orders/:id/confirm`       | comprador          | Confirma recepción y marca `delivered`/`completed`. |
-| POST   | `/orders/:id/cancel`        | comprador          | Cancela si no pagó.                                 |
-| GET    | `/orders/:id/events`        | comprador/vendedor | Historial.                                          |
+| Método | Ruta                               | Auth                     | Descripción                                     |
+| ------ | ---------------------------------- | ------------------------ | ----------------------------------------------- |
+| POST   | `/orders/quote`                    | usuario verificado       | Cotiza totales sin crear la orden.              |
+| POST   | `/orders`                          | usuario verificado       | Crea orden desde publicación u oferta aceptada. |
+| GET    | `/me/purchases`                    | comprador                | Historial de compras.                           |
+| GET    | `/me/sales`                        | vendedor                 | Historial de ventas.                            |
+| GET    | `/me/orders/:id`                   | comprador/vendedor       | Detalle con desglose, pago, código y timeline.  |
+| POST   | `/me/orders/:id/payment`           | comprador                | Crea/reutiliza el pago por transferencia.       |
+| POST   | `/me/orders/:id/validate-delivery` | vendedor                 | Valida código de 6 dígitos y marca `delivered`. |
+| POST   | `/me/orders/:id/confirm-receipt`   | comprador                | Confirma recepción y completa la orden.         |
+| POST   | `/me/orders/:id/handover`          | comprador/vendedor       | Marca la entrega como coordinada.               |
+| DELETE | `/me/orders/:id`                   | comprador/vendedor       | Cancela una orden `pending_payment`.            |
+| POST   | `/me/orders/:id/simulate-payment`  | comprador (solo sandbox) | Simula una transferencia Talo en desarrollo.    |
+| POST   | `/webhooks/talo?token=`            | Talo                     | Webhook idempotente de actualización de pago.   |
 
 Body de creación:
 
 ```json
 {
-  "listing_id": "uuid",
-  "offer_id": "uuid | null",
-  "delivery_mode": "pickup_home | midpoint | home_delivery",
-  "coupon_id": "uuid | null"
+  "listingId": "uuid",
+  "offerId": "uuid | null",
+  "deliveryMode": "pickup_home | midpoint | home_delivery",
+  "couponId": "uuid | null"
 }
 ```
+
+`couponId` todavía no está disponible. Si se envía, la API responde `422`.
 
 Respuesta con desglose:
 
@@ -169,21 +174,40 @@ Respuesta con desglose:
 {
   "status": "success",
   "order": {
-    "order_id": "uuid",
+    "id": "uuid",
     "status": "pending_payment",
-    "item_price_ars": 20000,
-    "midpoint_fee_ars": 0,
-    "tasa_percent": 7,
-    "tasa_fixed_ars": 500,
-    "tasa_amount_ars": 1900,
-    "total_amount_ars": 21900,
-    "seller_payout_ars": 20000,
-    "delivery_mode": "pickup_home"
-  }
+    "deliveryMode": "pickup_home",
+    "itemPriceArs": 20000,
+    "midpointFeeArs": 0,
+    "tasaPercent": 7,
+    "tasaFixedArs": 500,
+    "tasaAmountArs": 1900,
+    "totalAmountArs": 21900,
+    "sellerPayoutArs": 20000,
+    "payment": {
+      "status": "PENDING",
+      "cvu": "0000000000000000000000",
+      "alias": "revia.demo.talo"
+    },
+    "deliveryCode": null,
+    "events": []
+  },
+  "paymentError": null
 }
 ```
 
-Estados: `pending_payment`, `paid`, `handover_pending`, `delivered`, `completed`, `payout_pending`, `paid_out`, `disputed`, `refunded`, `cancelled`, `expired`.
+Reglas:
+
+- Si Talo falla al crear el pago, `POST /orders` devuelve `201` con `paymentError`; la orden queda `pending_payment` y el comprador puede reintentar con `POST /me/orders/:id/payment`.
+- `GET /me/orders/:id` devuelve el código de 6 dígitos solo al comprador y solo mientras no fue usado.
+- El vendedor valida el código con `POST /me/orders/:id/validate-delivery`.
+- El comprador puede confirmar la recepción antes de las 48 h con `POST /me/orders/:id/confirm-receipt`; la orden pasa directo a `completed`.
+- El webhook de Talo responde `200` rápido, consulta el pago canónico por API y procesa de forma idempotente con `payment_events.event_key`.
+- `SUCCESS` deja la orden `paid`, marca la publicación `sold` y emite el código.
+- `OVERPAID`/`UNDERPAID` dejan la orden `payment_review` para revisión manual.
+- `EXPIRED` deja la orden `expired` y libera la publicación.
+
+Estados: `pending_payment`, `payment_review`, `paid`, `handover_pending`, `delivered`, `completed`, `payout_pending`, `paid_out`, `disputed`, `refunded`, `cancelled`, `expired`.
 
 ## 9. Payouts
 

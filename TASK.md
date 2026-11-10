@@ -4,8 +4,8 @@ Tablero vivo del proyecto. Se actualiza al empezar y al terminar cada tarea. Si 
 
 ## Estado actual
 
-- **Fase:** Fase 5 completada en local (ofertas, chat y notificaciones in-app).
-- **Repo:** `REVIA-fullstack`, rama `dev`, con Fase 0 en `main` y Fases 1-5 en `dev`.
+- **Fase:** Fase 6 completada en local (órdenes, Talo, pago, entrega y 48 h).
+- **Repo:** `REVIA-fullstack`, rama `dev`, con Fase 0 en `main` y Fases 1-6 en `dev`.
 - **Alcance:** MVP C2C local en Bahía Blanca, ARS, Tasa de REVIA 7% + $500, custodia y payouts manuales.
 - **Documentos creados:** `AGENTS.md`, `TASK.md`, `docs/SPEC.md`, `docs/ARCHITECTURE.md`, `docs/API.md`, `docs/DECISIONS.md`, `README.md`.
 - **Decisiones abiertas:** ninguna. D-026 a D-036 cerradas.
@@ -154,9 +154,9 @@ Tablero vivo del proyecto. Se actualiza al empezar y al terminar cada tarea. Si 
 - [x] Foto de perfil desde el dispositivo (`input[type=file]` + `capture="user"`), preview circular y recorte 512×512 WebP.
 - [x] Almacenamiento local de avatares en desarrollo (`apps/api/uploads/avatars`) servido desde `/uploads`.
 - [x] Campo `seller_verified_at` y badge "Perfil verificado"; el seed `vendedor@revia.test` lo muestra para pruebas.
-- [ ] Disparar `seller_verified_at` en la primera orden `completed` (Fase 6).
+- [x] Disparar `seller_verified_at` en la primera orden `completed` (Fase 6).
 - [ ] Migrar avatares a R2 o Cloudinary para producción (el disco de Render es efímero).
-- [ ] Historial de compras/ventas y auditoría de la orden (Fase 6).
+- [x] Historial de compras/ventas y auditoría de la orden (Fase 6).
 - [ ] Comprobante de payout descargable (Fase 7).
 - [x] Errores: body-parser, CORS, Multer, Sequelize y PostgreSQL normalizados; mensajes Zod en español; rate limit global en español.
 - [x] Tests de errores: 404, JSON inválido, 422 con campos obligatorios/email/longitud y 401.
@@ -252,23 +252,37 @@ Tablero vivo del proyecto. Se actualiza al empezar y al terminar cada tarea. Si 
 
 **Objetivo:** cobrar por transferencia, custodiar y completar la entrega.
 
-- [ ] Modelos `Order`, `OrderEvent`, `DeliveryCode`, `Payment`, `PaymentEvent`, `Refund`.
-- [ ] Migraciones y snapshot de precios/Tasa.
-- [ ] Crear orden desde publicación u oferta.
-- [ ] Integración Talo: crear pago, CVU/alias/QR, consultar estado.
-- [ ] Webhook Talo idempotente y conciliación.
-- [ ] Estados `pending_payment`, `paid`, `delivered`, `completed`.
-- [ ] Código de 6 dígitos y validación.
-- [ ] Ventana de 48 h y job de auto-completado.
-- [ ] Jobs de expiración de ofertas y pagos.
-- [ ] UI de checkout, pago, orden y entrega.
-- [ ] Historial de compras del comprador (`/compras`) con estado y acciones.
-- [ ] Historial de ventas del vendedor (`/ventas`) con estado, comprador, monto y payout.
-- [ ] Timeline de la orden visible para comprador y vendedor (auditoría de la operación).
-- [ ] Setear `seller_verified_at` al completar la primera venta y mostrar el check de perfil verificado.
-- [ ] Tests de Talo mock, webhook, montos, estados e historiales.
+- [x] Modelos `Order`, `OrderEvent`, `DeliveryCode`, `Payment`, `PaymentEvent`, `Refund`.
+- [x] Migraciones y snapshot de precios/Tasa.
+- [x] Crear orden desde publicación u oferta.
+- [x] Integración Talo: crear pago, CVU/alias/QR, consultar estado.
+- [x] Webhook Talo idempotente y conciliación.
+- [x] Estados `pending_payment`, `paid`, `delivered`, `completed`.
+- [x] Código de 6 dígitos y validación.
+- [x] Ventana de 48 h y job de auto-completado.
+- [x] Jobs de expiración de ofertas y pagos.
+- [x] UI de checkout, pago, orden y entrega.
+- [x] Historial de compras del comprador (`/compras`) con estado y acciones.
+- [x] Historial de ventas del vendedor (`/ventas`) con estado, comprador, monto y payout.
+- [x] Timeline de la orden visible para comprador y vendedor (auditoría de la operación).
+- [x] Setear `seller_verified_at` al completar la primera venta y mostrar el check de perfil verificado.
+- [x] Tests de Talo mock, webhook, montos, estados e historiales.
 
 **DoD:** compra pagada por transferencia, entrega validada, orden completada a las 48 h y paneles de compras/ventas con auditoría.
+
+## Avance Fase 6 (2026-11-10)
+
+- Migración `008_orders_payments`: `orders`, `order_events`, `delivery_codes`, `payments`, `payment_events` y `refunds`.
+- Snapshot de precios, Tasa y payout; índices parciales contra doble venta y compras activas duplicadas.
+- Talo Sandbox integrado: token, creación de pago, CVU/alias, consulta de estado, simulación de transferencia y webhook idempotente.
+- Órdenes desde publicación u oferta aceptada; checkout con cotización backend y reintento de pago.
+- Estados `pending_payment`, `payment_review`, `paid`, `handover_pending`, `delivered`, `completed`, `cancelled` y `expired`.
+- Código de entrega de 6 dígitos cifrado; validación por el vendedor y confirmación del comprador.
+- Jobs cada 60 s: expiración de ofertas, reconciliación de pagos vencidos y auto-completado a las 48 h.
+- `seller_verified_at` en la primera venta completada.
+- UI: checkout, `/compras`, `/compras/[id]`, `/ventas`, `/ventas/[id]`, instrucciones de pago con CVU/alias/QR, código y timeline.
+- Tests: **63 API + 11 web**; build/lint verdes; migración `008` down/up verificada.
+- Smoke real con Talo Sandbox: oferta aceptada → pago → webhook → código → entrega → orden completada (`npm run smoke:fase5-6`).
 
 ## Fase 7 — Payouts manuales, finanzas y conciliación
 

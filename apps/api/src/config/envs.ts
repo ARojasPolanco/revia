@@ -42,8 +42,9 @@ const envSchema = z.object({
   R2_PUBLIC_URL: z.string().url().optional(),
 
   TALO_USER_ID: z.string().optional(),
-  TALO_API_KEY: z.string().optional(),
-  TALO_API_URL: z.string().url().default('https://api.talo.com.ar'),
+  TALO_CLIENT_ID: z.string().optional(),
+  TALO_CLIENT_SECRET: z.string().optional(),
+  TALO_API_URL: z.string().url().default('https://sandbox-api.talo.com.ar'),
   TALO_WEBHOOK_SECRET: z.string().optional(),
 
   DIDIT_API_KEY: z.string().optional(),
@@ -62,7 +63,18 @@ const envSchema = z.object({
   ADMIN_PASSWORD: z.string().optional(),
 });
 
-const parsed = envSchema.safeParse(process.env);
+const cleanedEnv = z.preprocess((value) => {
+  if (value && typeof value === 'object' && !Array.isArray(value)) {
+    return Object.fromEntries(
+      Object.entries(value).filter(
+        ([, entry]) => !(typeof entry === 'string' && entry.trim() === '')
+      )
+    );
+  }
+  return value;
+}, envSchema);
+
+const parsed = cleanedEnv.safeParse(process.env);
 
 if (!parsed.success) {
   console.error('Variables de entorno inválidas:', parsed.error.flatten().fieldErrors);

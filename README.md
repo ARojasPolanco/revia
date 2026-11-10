@@ -6,7 +6,7 @@ El dinero queda en custodia de REVIA hasta que el comprador confirma la entrega 
 
 ## Estado
 
-Documentación inicial completa. Código de aplicación todavía no iniciado. Ver `TASK.md`.
+Fases 0-6 implementadas en local: auth, KYC, publicaciones, descubrimiento, ofertas/chat y órdenes con Talo Sandbox. Ver `TASK.md`.
 
 ## Stack
 
@@ -112,6 +112,8 @@ npm run dev:web
 | `npm run seed:dev`        | Crea usuarios demo para probar las pantallas protegidas. |
 | `npm run seed:categories` | Siembra la taxonomía de 8 rubros y sus atributos.        |
 | `npm run seed:admin`      | Crea admin inicial.                                      |
+| `npm run talo:smoke`      | Crea y simula un pago de $100 en Talo Sandbox.           |
+| `npm run smoke:fase5-6`   | Flujo real oferta → pago sandbox → entrega → completada. |
 
 Los scripts definitivos se ajustan en la Fase 0.
 
@@ -119,6 +121,7 @@ Los scripts definitivos se ajustan en la Fase 0.
 
 - `npm run test`: API con Vitest + Supertest.
 - `npm run test:web`: componentes Next.js con Vitest + Testing Library.
+- `npm run smoke:fase5-6`: smoke real contra Talo Sandbox (requiere `apps/api/.env` y `npm run seed:dev`).
 
 ## Usuarios demo
 
@@ -161,8 +164,9 @@ R2_SECRET_ACCESS_KEY=
 R2_BUCKET=
 R2_PUBLIC_URL=
 TALO_USER_ID=
-TALO_API_KEY=
-TALO_API_URL=https://api.talo.com.ar
+TALO_CLIENT_ID=
+TALO_CLIENT_SECRET=
+TALO_API_URL=https://sandbox-api.talo.com.ar
 TALO_WEBHOOK_SECRET=
 DIDIT_API_KEY=
 DIDIT_WEBHOOK_SECRET=

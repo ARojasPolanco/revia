@@ -57,4 +57,58 @@ describe('OfferCard', () => {
 
     expect(onAccept).toHaveBeenCalledWith(offer);
   });
+
+  it('permite aceptar una contraoferta del vendedor desde la pestaña enviadas', () => {
+    const onAccept = vi.fn();
+    const counterOffer: Offer = {
+      ...offer,
+      id: 'offer-2',
+      direction: 'seller_to_buyer',
+      seller: {
+        id: 'seller-1',
+        fullName: 'Vendedor Demo',
+        bio: null,
+        location: 'Bahía Blanca',
+        avatarUrl: null,
+        sellerVerified: true,
+        createdAt: '2026-01-01T00:00:00.000Z',
+      },
+    };
+
+    render(
+      <OfferCard
+        offer={counterOffer}
+        mode="sent"
+        busy={false}
+        onAccept={onAccept}
+        onReject={vi.fn()}
+        onCounter={vi.fn()}
+        onCancel={vi.fn()}
+      />
+    );
+
+    expect(screen.getByRole('button', { name: 'Aceptar' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Cancelar oferta' })).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Aceptar' }));
+
+    expect(onAccept).toHaveBeenCalledWith(counterOffer);
+  });
+
+  it('mantiene cancelar para una oferta propia pendiente', () => {
+    render(
+      <OfferCard
+        offer={offer}
+        mode="sent"
+        busy={false}
+        onAccept={vi.fn()}
+        onReject={vi.fn()}
+        onCounter={vi.fn()}
+        onCancel={vi.fn()}
+      />
+    );
+
+    expect(screen.getByRole('button', { name: 'Cancelar oferta' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Aceptar' })).not.toBeInTheDocument();
+  });
 });

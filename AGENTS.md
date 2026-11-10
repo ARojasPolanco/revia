@@ -14,8 +14,8 @@ La especificación completa está en `docs/SPEC.md`.
 
 ## 2. Estado del repositorio
 
-- Fase actual: **documentación inicial**. Todavía no hay código de aplicación.
-- El repositorio se crea nuevo, con historia Git limpia.
+- Fase actual: **Fases 1-6 completadas en local**. La siguiente es la Fase 7 (payouts manuales y finanzas).
+- El repositorio tiene Fase 0 en `main` y Fases 1-6 en `dev`.
 - No hay credenciales, claves ni secretos versionados.
 - Toda decisión de producto y técnica se registra en `docs/DECISIONS.md`.
 - El código se construye por fases según `TASK.md`.
@@ -377,6 +377,9 @@ npm run test:web         # tests de web
 npm run seed             # seed de desarrollo
 npm run seed:dev         # usuarios demo para probar pantallas protegidas
 npm run seed:admin       # crea admin inicial
+npm run migrate:down     # baja la última migración
+npm run talo:smoke       # pago de $100 en Talo Sandbox
+npm run smoke:fase5-6    # oferta → pago sandbox → entrega → completada
 ```
 
 Los comandos definitivos se ajustan en la Fase 0.

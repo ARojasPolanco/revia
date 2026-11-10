@@ -339,3 +339,18 @@ Se reutilizan patrones y módulos, adaptados a TypeScript:
 - **Market Design:** monorepo, Express+Sequelize, capas, Zod, errores, soft delete, R2, Resend, rate limits, admin de config, Husky/commitlint, frontend-first con mocks.
 - **Duo LAS:** auth JWT+bcrypt+emails, verificación de email, reset, hCaptcha, PWA, `web-push`/VAPID, service worker, notificaciones persistidas, interceptor 401 sin loops, deploy Render+Vercel+Neon, estructura de `docs/`, seeds idempotentes.
 - **No se copian** reglas de negocio ajenas (ni Riot, ni comisiones de Market Design). Solo infraestructura y convenciones.
+
+## 16. Fase 6 implementada (2026-11-10)
+
+- Migración `008_orders_payments`: `orders`, `order_events`, `delivery_codes`, `payments`, `payment_events` y `refunds`, con índices parciales para evitar doble venta y compras activas duplicadas.
+- Snapshot inmutable en la orden: precio del artículo, punto medio, porcentaje y fijo de Tasa, Tasa calculada, total y payout del vendedor.
+- Talo sandbox/producción con URLs fijas: `https://sandbox-api.talo.com.ar` y `https://api.talo.com.ar`. Credenciales: `TALO_USER_ID`, `TALO_CLIENT_ID`, `TALO_CLIENT_SECRET`.
+- `POST /orders` crea la orden y el pago; si Talo falla, la orden queda `pending_payment` con `paymentError` y se reintenta con `POST /me/orders/:id/payment`.
+- Webhook `POST /webhooks/talo?token=...`: responde `200`, consulta el pago canónico y es idempotente por `payment_events.event_key`. En local no se envía `webhook_url` a Talo porque exige HTTPS público; el smoke lo invoca manualmente.
+- `SUCCESS`: orden `paid`, publicación `sold`, código de entrega de 6 dígitos cifrado con AES-256-GCM y notificaciones a ambas partes.
+- `OVERPAID`/`UNDERPAID`: orden `payment_review`. `EXPIRED`: orden `expired` y publicación disponible.
+- Jobs cada 60 s: expiran ofertas, reconcilian pagos vencidos y completan órdenes `delivered` con 48 h cumplidas.
+- El comprador puede validar la entrega con el código (vendedor) o confirmar la recepción (compra completada directa).
+- Primera venta completada setea `seller_verified_at`.
+- UI: checkout en el detalle de publicación, `/compras`, `/compras/[id]`, `/ventas`, `/ventas/[id]`, instrucciones CVU/alias/QR, código de entrega y timeline.
+- Smoke real: `npm run smoke:fase5-6` recorre oferta aceptada, pago sandbox, webhook, código, entrega y orden completada.

@@ -153,3 +153,20 @@ export const createOrderSchema = z
     couponId: uuidSchema.optional(),
   })
   .strict();
+
+export const orderQuoteSchema = z
+  .object({
+    listingId: uuidSchema,
+    offerId: uuidSchema.optional(),
+    deliveryMode: deliveryModeSchema,
+  })
+  .strict();
+
+export const deliveryCodeSchema = z
+  .object({
+    code: z
+      .string()
+      .trim()
+      .regex(/^\d{6}$/, 'El código debe tener 6 dígitos.'),
+  })
+  .strict();

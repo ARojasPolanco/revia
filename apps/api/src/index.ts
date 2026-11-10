@@ -2,6 +2,7 @@ import { app } from './app.js';
 import { sequelize } from './config/database.js';
 import { envs } from './config/envs.js';
 import { logger } from './config/logger.js';
+import { runOrderJobs } from './jobs/orderJobs.js';
 
 const server = app.listen(envs.PORT, () => {
   logger.info(`REVIA API escuchando en ${envs.API_URL}`, {
@@ -10,8 +11,15 @@ const server = app.listen(envs.PORT, () => {
   });
 });
 
+const jobsInterval = setInterval(() => {
+  void runOrderJobs();
+}, 60_000);
+jobsInterval.unref();
+void runOrderJobs();
+
 async function shutdown(signal: string): Promise<void> {
   logger.info(`Cerrando REVIA API por ${signal}`);
+  clearInterval(jobsInterval);
 
   server.close(() => {
     void sequelize

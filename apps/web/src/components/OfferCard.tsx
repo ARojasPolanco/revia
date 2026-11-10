@@ -26,6 +26,9 @@ function formatDate(value: string | null): string | null {
 export function OfferCard({ offer, mode, busy, onAccept, onReject, onCounter, onCancel }: Props) {
   const otherUser = mode === 'received' ? offer.buyer : offer.seller;
   const pending = offer.status === 'pending';
+  const isRecipient =
+    (mode === 'received' && offer.direction === 'buyer_to_seller') ||
+    (mode === 'sent' && offer.direction === 'seller_to_buyer');
 
   return (
     <article className="flex flex-col gap-3 rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm">
@@ -60,16 +63,26 @@ export function OfferCard({ offer, mode, busy, onAccept, onReject, onCounter, on
       </div>
 
       {offer.status === 'accepted' ? (
-        <p className="rounded-xl border border-teal-200 bg-teal-50 px-3 py-2 text-xs text-teal-800">
-          {mode === 'sent'
-            ? `Oferta aceptada. El pago se habilita en la próxima fase. Vence ${formatDate(offer.paymentExpiresAt) ?? 'en 24 h'}.`
-            : 'Oferta aceptada. Esperando el pago del comprador.'}
-        </p>
+        mode === 'sent' ? (
+          <div className="flex flex-col gap-2 rounded-xl border border-teal-200 bg-teal-50 px-3 py-2 text-xs text-teal-800">
+            <p>Oferta aceptada. Vence {formatDate(offer.paymentExpiresAt) ?? 'en 24 h'}.</p>
+            <Link
+              className="w-fit rounded-lg bg-teal-700 px-3 py-1.5 text-xs font-semibold text-white"
+              href={`/publicaciones/${offer.listingId}?offerId=${offer.id}`}
+            >
+              Pagar ahora
+            </Link>
+          </div>
+        ) : (
+          <p className="rounded-xl border border-teal-200 bg-teal-50 px-3 py-2 text-xs text-teal-800">
+            Oferta aceptada. Esperando el pago del comprador.
+          </p>
+        )
       ) : null}
 
       {pending ? (
         <div className="flex flex-wrap gap-2">
-          {mode === 'received' ? (
+          {isRecipient ? (
             <>
               <button
                 className="rounded-lg bg-teal-700 px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-60"

@@ -13,10 +13,12 @@
     "test:watch": "vitest",
     "migrate": "tsx src/config/migrator.ts up",
     "migrate:down": "tsx src/config/migrator.ts down",
+    "talo:smoke": "tsx src/scripts/taloSmoke.ts",
     "seed": "tsx src/seeders/seed.ts",
     "seed:dev": "tsx src/seeders/seed.ts",
     "seed:categories": "tsx src/seeders/categories.ts",
-    "seed:admin": "tsx src/seeders/seedAdmin.ts"
+    "seed:admin": "tsx src/seeders/seedAdmin.ts",
+    "smoke:fase5-6": "tsx src/scripts/fase5-6-smoke.ts"
   },
   "dependencies": {
     "@revia/shared": "*",

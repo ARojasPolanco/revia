@@ -63,6 +63,7 @@ export type OfferStatus = (typeof OFFER_STATUSES)[number];
 
 export const ORDER_STATUSES = [
   'pending_payment',
+  'payment_review',
   'paid',
   'handover_pending',
   'delivered',
@@ -75,6 +76,44 @@ export const ORDER_STATUSES = [
   'expired',
 ] as const;
 export type OrderStatus = (typeof ORDER_STATUSES)[number];
+
+export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
+  pending_payment: 'Pendiente de pago',
+  payment_review: 'Pago en revisión',
+  paid: 'Pagado',
+  handover_pending: 'Entrega coordinada',
+  delivered: 'Entregado',
+  completed: 'Completado',
+  payout_pending: 'Payout pendiente',
+  paid_out: 'Pago enviado',
+  disputed: 'En disputa',
+  refunded: 'Reembolsado',
+  cancelled: 'Cancelado',
+  expired: 'Vencido',
+};
+
+export const ORDER_EVENT_LABELS: Record<string, string> = {
+  order_created: 'Compra iniciada',
+  payment_created: 'Instrucciones de pago generadas',
+  payment_creation_failed: 'No se pudieron generar las instrucciones de pago',
+  payment_confirmed: 'Pago confirmado',
+  payment_review: 'Pago en revisión',
+  payment_expired: 'Pago vencido',
+  delivery_code_issued: 'Código de entrega emitido',
+  delivery_validated: 'Entrega confirmada por el vendedor',
+  buyer_confirmed_receipt: 'Recepción confirmada por el comprador',
+  handover_pending: 'Entrega coordinada',
+  order_completed: 'Orden completada',
+  order_cancelled: 'Orden cancelada',
+  listing_unavailable: 'Publicación no disponible',
+  seller_verified: 'Perfil verificado',
+};
+
+export const PAYMENT_STATUSES = ['PENDING', 'SUCCESS', 'OVERPAID', 'UNDERPAID', 'EXPIRED'] as const;
+export type PaymentStatus = (typeof PAYMENT_STATUSES)[number];
+
+export const REFUND_STATUSES = ['PENDING', 'SUCCESS', 'FAILED'] as const;
+export type RefundStatus = (typeof REFUND_STATUSES)[number];
 
 export const DISPUTE_STATUSES = [
   'open',
@@ -116,8 +155,12 @@ export const NOTIFICATION_TYPES = [
   'offer_expiring',
   'payment_confirmed',
   'payment_expired',
+  'payment_review',
   'delivery_code_issued',
   'order_delivered',
+  'order_handover_pending',
+  'order_cancelled',
+  'seller_verified',
   'claim_window_reminder',
   'order_completed',
   'payout_sent',
