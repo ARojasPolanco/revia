@@ -10,6 +10,7 @@ import {
 import { AppError } from '../../errors/appError.js';
 import { User } from '../users/user.model.js';
 import { toPublicUser, type PublicUser } from '../auth/auth.service.js';
+import { createNotification } from '../notifications/notifications.service.js';
 import { Category } from '../categories/category.model.js';
 import { CategoryAttribute } from '../categories/categoryAttribute.model.js';
 import { getFollowingIds } from '../users/follows.service.js';
@@ -577,6 +578,14 @@ export async function approveListing(adminId: string, listingId: string): Promis
     rejectionReason: null,
   });
 
+  await createNotification({
+    userId: listing.sellerId,
+    type: 'listing_approved',
+    title: 'Publicación aprobada',
+    body: `"${listing.title}" ya está activa y visible en el catálogo.`,
+    data: { listingId },
+  });
+
   const withRelations = await findWithRelations(listingId);
 
   return toListingView(withRelations ?? listing);
@@ -602,6 +611,14 @@ export async function rejectListing(
     rejectionReason: reason,
     reviewedBy: adminId,
     reviewedAt: new Date(),
+  });
+
+  await createNotification({
+    userId: listing.sellerId,
+    type: 'listing_rejected',
+    title: 'Publicación rechazada',
+    body: `"${listing.title}" fue rechazada. Motivo: ${reason}`,
+    data: { listingId },
   });
 
   const withRelations = await findWithRelations(listingId);

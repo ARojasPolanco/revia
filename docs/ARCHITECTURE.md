@@ -258,10 +258,12 @@ Tablas principales:
 | `messages`                  | Mensajes, flags de contacto, leído.                         |
 | `notifications`             | Notificaciones in-app.                                      |
 | `push_subscriptions`        | Suscripciones Web Push.                                     |
+| `user_blocks`               | Bloqueos entre usuarios.                                    |
+| `user_reports`              | Denuncias de usuarios.                                      |
 | `coupons`                   | Cupones/creditos por reembolso.                             |
 | `coupon_redemptions`        | Uso del cupón.                                              |
 | `config`                    | Parámetros editables con whitelist.                         |
-| `reports`                   | Denuncias de publicaciones/usuarios.                        |
+| `listing_reports`           | Denuncias de publicaciones.                                 |
 | `audit_logs`                | Acciones administrativas y de finanzas.                     |
 | `metrics_events`            | Eventos de negocio.                                         |
 | `errors`                    | Errores 5xx/no operativos.                                  |

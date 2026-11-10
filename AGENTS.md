@@ -240,6 +240,12 @@ Reglas:
 - Favoritos y follows son idempotentes y no reservan ni modifican la publicación.
 - Optimistic UI en favoritos/follow con rollback ante error.
 
+### Notificaciones
+
+- Se persisten en `notifications` antes de cualquier envío externo.
+- En la Fase 5 son in-app; el Web Push llega en la Fase 9.
+- No incluyen tokens, emails completos ni datos de pago.
+
 ### Ofertas
 
 - Descuento máximo 30%.

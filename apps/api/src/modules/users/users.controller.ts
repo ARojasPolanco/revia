@@ -5,6 +5,7 @@ import { AppError } from '../../errors/appError.js';
 import { toSelfUser } from '../auth/auth.service.js';
 import { saveAvatar } from './avatar.service.js';
 import * as followsService from './follows.service.js';
+import * as userModerationService from './userModeration.service.js';
 import * as usersService from './users.service.js';
 
 function parseId(value: string | undefined): string {
@@ -77,6 +78,37 @@ export const getFollowers = catchAsync(async (req: Request, res: Response) => {
   res.status(200).json({
     status: 'success',
     followers,
+  });
+});
+
+export const block = catchAsync(async (req: Request, res: Response) => {
+  await userModerationService.blockUser(req.user!.id, parseId(req.params.id));
+
+  res.status(200).json({
+    status: 'success',
+    message: 'Usuario bloqueado.',
+  });
+});
+
+export const unblock = catchAsync(async (req: Request, res: Response) => {
+  await userModerationService.unblockUser(req.user!.id, parseId(req.params.id));
+
+  res.status(200).json({
+    status: 'success',
+    message: 'Usuario desbloqueado.',
+  });
+});
+
+export const report = catchAsync(async (req: Request, res: Response) => {
+  await userModerationService.reportUser(
+    req.user!.id,
+    parseId(req.params.id),
+    (req.body as { reason: string }).reason
+  );
+
+  res.status(201).json({
+    status: 'success',
+    message: 'Recibimos tu denuncia. Gracias por avisarnos.',
   });
 });
 

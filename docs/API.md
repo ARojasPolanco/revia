@@ -58,7 +58,9 @@ Reglas:
 | DELETE | `/users/:id/follow`       | usuario | Dejar de seguir.                                                   |
 | GET    | `/me/following`           | usuario | A quién sigo.                                                      |
 | GET    | `/me/followers`           | usuario | Quiénes me siguen.                                                 |
-| POST   | `/users/:id/report`       | usuario | Denunciar usuario.                                                 |
+| POST   | `/users/:id/block`        | usuario | Bloquear usuario; impide mensajes entre ambos.                     |
+| DELETE | `/users/:id/block`        | usuario | Desbloquear.                                                       |
+| POST   | `/users/:id/report`       | usuario | Denunciar usuario (`reason` 5–500).                                |
 
 ## 4. KYC
 
@@ -115,24 +117,26 @@ Flujo: `POST /listings` crea el borrador → `POST /listings/:id/photos` agrega 
 
 ## 7. Ofertas
 
-| Método | Ruta                   | Auth      | Descripción                     |
-| ------ | ---------------------- | --------- | ------------------------------- |
-| POST   | `/listings/:id/offers` | usuario   | Crea oferta; valida -30%.       |
-| GET    | `/me/offers`           | usuario   | Ofertas enviadas y recibidas.   |
-| POST   | `/offers/:id/accept`   | vendedor  | Acepta; habilita pago por 24 h. |
-| POST   | `/offers/:id/reject`   | vendedor  | Rechaza.                        |
-| POST   | `/offers/:id/counter`  | vendedor  | Contraoferta.                   |
-| DELETE | `/offers/:id`          | comprador | Cancela oferta pendiente.       |
+| Método | Ruta                   | Auth         | Descripción                                     |
+| ------ | ---------------------- | ------------ | ----------------------------------------------- |
+| POST   | `/listings/:id/offers` | usuario      | Crea oferta; valida -30%.                       |
+| GET    | `/me/offers`           | usuario      | Ofertas enviadas y recibidas.                   |
+| POST   | `/offers/:id/accept`   | destinatario | Acepta; habilita pago por 24 h.                 |
+| POST   | `/offers/:id/reject`   | destinatario | Rechaza.                                        |
+| POST   | `/offers/:id/counter`  | destinatario | Contraoferta (crea una nueva oferta pendiente). |
+| DELETE | `/offers/:id`          | creador      | Cancela su oferta pendiente.                    |
 
 Estados: `pending`, `accepted`, `rejected`, `countered`, `expired`, `cancelled`.
 
 Reglas:
 
-- Descuento máximo 30% sobre `price_ars`.
-- Vigencia 24 h; pago 24 h tras aceptación.
+- Descuento máximo 30% sobre `price_ars`; mínimo 70% del precio publicado.
+- Vigencia 24 h; pago 24 h tras aceptación (`paymentExpiresAt`).
 - No reserva el artículo.
 - Límite 25/día por comprador.
 - No aplica a Tasa ni tarifa logística.
+- Cada oferta/contraoferta notifica al destinatario en el centro in-app.
+- La oferta aceptada queda lista para el checkout de la Fase 6.
 
 ## 8. Órdenes
 
@@ -226,34 +230,33 @@ Reglas:
 
 | Método | Ruta                                 | Auth         | Descripción                                  |
 | ------ | ------------------------------------ | ------------ | -------------------------------------------- |
-| GET    | `/conversations`                     | usuario      | Bandeja.                                     |
+| GET    | `/conversations`                     | usuario      | Bandeja con último mensaje y no leídos.      |
 | POST   | `/conversations`                     | usuario      | Crea/reutiliza conversación por publicación. |
-| GET    | `/conversations/:id/messages?after=` | participante | Polling de mensajes.                         |
+| GET    | `/conversations/:id`                 | participante | Detalle de la conversación.                  |
+| GET    | `/conversations/:id/messages?after=` | participante | Polling de mensajes (cada 3–5 s).            |
 | POST   | `/conversations/:id/messages`        | participante | Enviar mensaje; filtro de contacto.          |
 | POST   | `/conversations/:id/read`            | participante | Marca leído.                                 |
-| POST   | `/conversations/:id/block`           | participante | Bloquea.                                     |
 
 Mensaje:
 
 ```json
 {
-  "body": "texto",
-  "attachment_ids": []
+  "body": "texto"
 }
 ```
 
-Respuesta incluye `flagged_contact: true|false` y `warning`.
+La respuesta incluye `message.flaggedContact`, `message.flaggedReasons` y `warning` cuando se detectan teléfonos, emails, redes o datos de pago. **No se bloquea el envío**: se advierte y se marca para revisión.
 
 ## 13. Notificaciones y push
 
-| Método | Ruta                      | Auth    | Descripción                  |
-| ------ | ------------------------- | ------- | ---------------------------- |
-| GET    | `/notifications`          | usuario | Listado paginado.            |
-| POST   | `/notifications/:id/read` | usuario | Marca una.                   |
-| POST   | `/notifications/read-all` | usuario | Marca todas.                 |
-| POST   | `/push/subscribe`         | usuario | Guarda suscripción Web Push. |
-| POST   | `/push/unsubscribe`       | usuario | Elimina suscripción.         |
-| GET    | `/push/public-key`        | público | Clave VAPID pública.         |
+| Método | Ruta                      | Auth    | Descripción                           |
+| ------ | ------------------------- | ------- | ------------------------------------- |
+| GET    | `/notifications`          | usuario | Listado paginado + `unreadCount`.     |
+| POST   | `/notifications/:id/read` | usuario | Marca una.                            |
+| POST   | `/notifications/read-all` | usuario | Marca todas.                          |
+| POST   | `/push/subscribe`         | usuario | Guarda suscripción Web Push (Fase 9). |
+| POST   | `/push/unsubscribe`       | usuario | Elimina suscripción (Fase 9).         |
+| GET    | `/push/public-key`        | público | Clave VAPID pública (Fase 9).         |
 
 ## 14. Admin
 

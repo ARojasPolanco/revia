@@ -3,6 +3,7 @@ import { protect } from '../middlewares/auth.js';
 import { avatarUpload } from '../middlewares/upload.js';
 import { authRouter } from '../modules/auth/auth.route.js';
 import { categoriesRouter } from '../modules/categories/categories.route.js';
+import { conversationsRouter } from '../modules/chat/chat.route.js';
 import { kycRouter } from '../modules/kyc/kyc.route.js';
 import {
   adminListingsRouter,
@@ -11,6 +12,8 @@ import {
   listingsRouter,
   meListingsRouter,
 } from '../modules/listings/listings.route.js';
+import { notificationsRouter } from '../modules/notifications/notifications.route.js';
+import { meOffersRouter, offersRouter } from '../modules/offers/offers.route.js';
 import { payoutsRouter } from '../modules/payouts/payouts.route.js';
 import { uploadAvatar } from '../modules/users/users.controller.js';
 import { meFollowsRouter, usersRouter } from '../modules/users/users.route.js';
@@ -30,10 +33,14 @@ apiRouter.use('/users', usersRouter);
 apiRouter.use('/categories', categoriesRouter);
 apiRouter.use('/listings', listingsRouter);
 apiRouter.use('/feed', feedRouter);
+apiRouter.use('/offers', offersRouter);
+apiRouter.use('/conversations', conversationsRouter);
+apiRouter.use('/notifications', notificationsRouter);
 apiRouter.use('/kyc', kycRouter);
 apiRouter.use('/me', payoutsRouter);
 apiRouter.use('/me', meListingsRouter);
 apiRouter.use('/me', meFollowsRouter);
+apiRouter.use('/me', meOffersRouter);
 apiRouter.post('/me/avatar', protect, avatarUpload.single('avatar'), uploadAvatar);
 apiRouter.use('/admin/listings', adminListingsRouter);
 apiRouter.use('/admin/reports', adminReportsRouter);

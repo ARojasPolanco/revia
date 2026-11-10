@@ -127,5 +127,6 @@ export const NOTIFICATION_TYPES = [
   'review_received',
   'kyc_approved',
   'kyc_rejected',
+  'kyc_manual_review',
 ] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];

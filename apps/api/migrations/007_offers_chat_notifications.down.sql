@@ -1,0 +1,6 @@
+DROP TABLE IF EXISTS user_reports;
+DROP TABLE IF EXISTS user_blocks;
+DROP TABLE IF EXISTS notifications;
+DROP TABLE IF EXISTS messages;
+DROP TABLE IF EXISTS conversations;
+DROP TABLE IF EXISTS offers;

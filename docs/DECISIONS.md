@@ -275,3 +275,19 @@ Formato: `D-XXX · fecha · estado`. Estados: `aceptada`, `revisar`, `reemplazad
 - Contexto: los tests actuales cubren la API; el frontend no tenía cobertura automatizada.
 - Decisión: Vitest con `jsdom`, Testing Library y JSX automático de esbuild. Se testean componentes compartidos y una página real de App Router con `apiFetch` mockeado.
 - Consecuencias: se detectan regresiones de UI antes del smoke manual; no se reemplaza la prueba end-to-end del navegador.
+
+## D-035 · 2026-11-10 · aceptada
+
+**Ofertas bidireccionales con contraoferta.**
+
+- Contexto: el vendedor debe poder responder una oferta con otro precio, y el comprador debe poder aceptar esa contraoferta.
+- Decisión: cada oferta guarda `direction` (`buyer_to_seller` / `seller_to_buyer`) y `parent_offer_id`. El destinatario puede aceptar, rechazar o contraofertar; el creador puede cancelar. Límite -30%, 24 h, pago 24 h y 25/día.
+- Consecuencias: el flujo de negociación queda completo sin crear órdenes; el checkout de la oferta aceptada llega en la Fase 6.
+
+## D-036 · 2026-11-10 · aceptada
+
+**Chat con polling y notificaciones in-app.**
+
+- Contexto: sin logística integrada, el chat es el canal para coordinar la entrega.
+- Decisión: polling cada 4 s, conversación por publicación/comprador/vendedor, filtro de contacto que advierte y marca, y notificaciones persistidas en `notifications`. El push queda para la Fase 9.
+- Consecuencias: operación simple y compatible con Render free; el polling se puede migrar a SSE/WebSocket si crece.

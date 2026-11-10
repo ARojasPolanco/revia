@@ -4,13 +4,13 @@ Tablero vivo del proyecto. Se actualiza al empezar y al terminar cada tarea. Si 
 
 ## Estado actual
 
-- **Fase:** Fase 4 completada en local (búsqueda, feed, follows, favoritos y perfil de vendedor).
-- **Repo:** `REVIA-fullstack`, rama `dev`, con Fase 0 en `main` y Fases 1-4 en `dev`.
+- **Fase:** Fase 5 completada en local (ofertas, chat y notificaciones in-app).
+- **Repo:** `REVIA-fullstack`, rama `dev`, con Fase 0 en `main` y Fases 1-5 en `dev`.
 - **Alcance:** MVP C2C local en Bahía Blanca, ARS, Tasa de REVIA 7% + $500, custodia y payouts manuales.
 - **Documentos creados:** `AGENTS.md`, `TASK.md`, `docs/SPEC.md`, `docs/ARCHITECTURE.md`, `docs/API.md`, `docs/DECISIONS.md`, `README.md`.
-- **Decisiones abiertas:** ninguna. D-026 a D-034 cerradas.
+- **Decisiones abiertas:** ninguna. D-026 a D-036 cerradas.
 - **Riesgo principal:** operación manual de payouts y dependencia de Talo (solo transferencia).
-- **Última actualización:** 2026-11-09.
+- **Última actualización:** 2026-11-10.
 
 ## Leyenda
 
@@ -224,18 +224,29 @@ Tablero vivo del proyecto. Se actualiza al empezar y al terminar cada tarea. Si 
 
 **Objetivo:** negociar y coordinar dentro de la plataforma.
 
-- [ ] Modelo `Offer` y migración con índice de oferta pendiente única.
-- [ ] Ofertas: crear, aceptar, rechazar, contraofertar, expirar.
-- [ ] Límite de -30%, 24 h, 25/día.
-- [ ] Modelos `Conversation`, `Message` y flags de contacto.
-- [ ] Chat con polling 3–5 s y paginación `after`.
-- [ ] Filtro de contacto (advierte y marca).
-- [ ] Bloquear y denunciar.
-- [ ] Modelo `Notification` y centro in-app.
-- [ ] UI de ofertas, chat y notificaciones.
-- [ ] Tests de ofertas, expiración, chat y filtro.
+- [x] Modelo `Offer` y migración `007` con índice de oferta pendiente única.
+- [x] Ofertas: crear, aceptar, rechazar, contraofertar, cancelar y expirar.
+- [x] Límite de -30%, 24 h, pago 24 h y 25/día.
+- [x] Modelos `Conversation`, `Message` y flags de contacto.
+- [x] Chat con polling 3–5 s, paginación por `after` y contador de no leídos.
+- [x] Filtro de contacto (advierte y marca, no bloquea).
+- [x] Bloquear y denunciar usuarios.
+- [x] Modelo `Notification`, centro in-app y marcado de leídas.
+- [x] UI de ofertas, chat, notificaciones y acciones en el detalle.
+- [x] Tests de ofertas, expiración, chat, filtro y notificaciones.
 
 **DoD:** oferta completa, chat operativo y notificaciones in-app.
+
+## Avance Fase 5 (2026-11-10)
+
+- Migración `007_offers_chat_notifications`: ofertas, conversaciones, mensajes, notificaciones, bloqueos y denuncias de usuarios.
+- Ofertas: hasta -30%, 24 h de vigencia, 24 h de pago, 25/día, contraofertas y cancelación.
+- Chat por publicación con polling de 4 s, paginación por `after`, no leídos y filtro de contacto.
+- Bloqueo y denuncia de usuarios; el bloqueo impide enviar mensajes.
+- Notificaciones in-app para ofertas, mensajes, publicaciones y KYC.
+- UI: `/ofertas`, `/chat`, `/chat/[id]`, `/notificaciones`, y acciones de oferta/contacto en el detalle.
+- Tests: **56 API + 7 componentes web**; build/lint verdes; migración `007` aplicada en `revia` y `revia_test`.
+- Smoke real: oferta → aceptada → notificación → chat con filtro → bloqueo → notificaciones leídas.
 
 ## Fase 6 — Órdenes, Talo, pago y entrega (48 h)
 

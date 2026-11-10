@@ -2,6 +2,7 @@ import { uuidSchema } from '@revia/shared';
 import { isProduction } from '../../config/envs.js';
 import { AppError } from '../../errors/appError.js';
 import { mailService } from '../notifications/email.service.js';
+import { createNotification } from '../notifications/notifications.service.js';
 import { User } from '../users/user.model.js';
 import {
   createDiditSession,
@@ -177,14 +178,32 @@ async function applyStatus(input: {
 
   if (previousStatus !== input.status) {
     if (input.status === 'approved') {
+      await createNotification({
+        userId: user.id,
+        type: 'kyc_approved',
+        title: 'Verificación aprobada',
+        body: 'Tu Verificación de REVIA fue aprobada. Ya podés publicar y cobrar.',
+      });
       void mailService.sendKycApprovedEmail({ to: user.email, name: user.fullName });
     } else if (input.status === 'rejected') {
+      await createNotification({
+        userId: user.id,
+        type: 'kyc_rejected',
+        title: 'Verificación rechazada',
+        body: `No pudimos validar tu identidad. Motivo: ${input.reason ?? 'No pudimos validar tus datos.'}`,
+      });
       void mailService.sendKycRejectedEmail({
         to: user.email,
         name: user.fullName,
         reason: input.reason ?? 'No pudimos validar tus datos.',
       });
     } else if (input.status === 'manual_review') {
+      await createNotification({
+        userId: user.id,
+        type: 'kyc_manual_review',
+        title: 'Verificación en revisión',
+        body: 'Tu Verificación de REVIA quedó en revisión manual.',
+      });
       void mailService.sendKycManualReviewEmail({ to: user.email, name: user.fullName });
     }
   }

@@ -1,8 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import type { FormEvent } from 'react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/components/AuthProvider';
 import { VerifiedBadge } from '@/components/VerifiedBadge';
 import { ZoomableImage } from '@/components/ZoomableImage';
@@ -17,6 +18,7 @@ import {
 
 export default function ListingDetailPage() {
   const params = useParams<{ id: string }>();
+  const router = useRouter();
   const { user } = useAuth();
   const [listing, setListing] = useState<Listing | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -26,6 +28,12 @@ export default function ListingDetailPage() {
   const [reportMessage, setReportMessage] = useState<string | null>(null);
   const [isFavorite, setIsFavorite] = useState(false);
   const [favoriteBusy, setFavoriteBusy] = useState(false);
+  const [offerOpen, setOfferOpen] = useState(false);
+  const [offerAmount, setOfferAmount] = useState('');
+  const [offerBusy, setOfferBusy] = useState(false);
+  const [offerError, setOfferError] = useState<string | null>(null);
+  const [offerMessage, setOfferMessage] = useState<string | null>(null);
+  const [chatStarting, setChatStarting] = useState(false);
 
   useEffect(() => {
     const id = typeof params.id === 'string' ? params.id : '';
@@ -82,6 +90,70 @@ export default function ListingDetailPage() {
       );
     } finally {
       setFavoriteBusy(false);
+    }
+  }
+
+  async function submitOffer(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    if (!user) {
+      setOfferError('Iniciá sesión para ofertar.');
+      return;
+    }
+
+    if (!listing) {
+      return;
+    }
+
+    const amount = Number(offerAmount);
+
+    if (!Number.isFinite(amount) || amount <= 0) {
+      setOfferError('Ingresá un monto válido.');
+      return;
+    }
+
+    setOfferBusy(true);
+    setOfferError(null);
+    setOfferMessage(null);
+
+    try {
+      await apiFetch(`/listings/${listing.id}/offers`, {
+        method: 'POST',
+        body: JSON.stringify({ amountArs: Math.round(amount) }),
+      });
+      setOfferMessage('Oferta enviada. El vendedor tiene 24 h para responder.');
+      setOfferOpen(false);
+      setOfferAmount('');
+    } catch (caught) {
+      setOfferError(caught instanceof ApiError ? caught.message : 'No se pudo enviar la oferta');
+    } finally {
+      setOfferBusy(false);
+    }
+  }
+
+  async function startChat() {
+    if (!user) {
+      setOfferError('Iniciá sesión para contactar al vendedor.');
+      return;
+    }
+
+    if (!listing) {
+      return;
+    }
+
+    setChatStarting(true);
+    setOfferError(null);
+
+    try {
+      const data = await apiFetch<{ conversation: { id: string } }>('/conversations', {
+        method: 'POST',
+        body: JSON.stringify({ listingId: listing.id }),
+      });
+      router.push(`/chat/${data.conversation.id}`);
+    } catch (caught) {
+      setOfferError(caught instanceof ApiError ? caught.message : 'No se pudo iniciar el chat');
+    } finally {
+      setChatStarting(false);
     }
   }
 
@@ -227,6 +299,95 @@ export default function ListingDetailPage() {
               >
                 {isFavorite ? 'Quitar de favoritos' : 'Guardar en favoritos'}
               </button>
+
+              {user && listing.seller?.id !== user.id ? (
+                <>
+                  <button
+                    className="w-full rounded-xl border border-neutral-300 px-4 py-3 text-sm font-semibold text-neutral-800 disabled:opacity-60"
+                    type="button"
+                    onClick={startChat}
+                    disabled={chatStarting}
+                  >
+                    {chatStarting ? 'Abriendo chat…' : 'Contactar vendedor'}
+                  </button>
+
+                  {listing.allowOffers && listing.status === 'active' ? (
+                    <>
+                      <button
+                        className="w-full rounded-xl border border-neutral-300 px-4 py-3 text-sm font-semibold text-neutral-800"
+                        type="button"
+                        onClick={() => setOfferOpen((value) => !value)}
+                      >
+                        {offerOpen ? 'Cancelar oferta' : 'Hacer oferta'}
+                      </button>
+
+                      {offerOpen ? (
+                        <form
+                          className="flex flex-col gap-2 rounded-xl border border-neutral-200 bg-neutral-50 p-3"
+                          onSubmit={submitOffer}
+                        >
+                          <label
+                            className="text-xs font-semibold text-neutral-600"
+                            htmlFor="offer-amount"
+                          >
+                            Tu oferta (ARS)
+                          </label>
+                          <input
+                            id="offer-amount"
+                            className="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm outline-none focus:border-teal-600"
+                            type="number"
+                            min={1}
+                            max={listing.priceArs}
+                            value={offerAmount}
+                            onChange={(event) => setOfferAmount(event.target.value)}
+                            required
+                          />
+                          <p className="text-[11px] text-neutral-500">
+                            Hasta 30% menos: mínimo {formatArs(Math.ceil(listing.priceArs * 0.7))}.
+                          </p>
+                          <button
+                            className="rounded-lg bg-teal-700 px-3 py-2 text-xs font-semibold text-white disabled:opacity-60"
+                            type="submit"
+                            disabled={offerBusy}
+                          >
+                            {offerBusy ? 'Enviando…' : 'Enviar oferta'}
+                          </button>
+                        </form>
+                      ) : null}
+                    </>
+                  ) : null}
+                </>
+              ) : null}
+
+              {user && listing.seller?.id === user.id ? (
+                <Link
+                  className="w-full rounded-xl border border-neutral-300 px-4 py-3 text-center text-sm font-semibold text-neutral-800"
+                  href="/ofertas"
+                >
+                  Ver ofertas recibidas
+                </Link>
+              ) : null}
+
+              {!user ? (
+                <Link
+                  className="w-full rounded-xl border border-neutral-300 px-4 py-3 text-center text-sm font-semibold text-neutral-800"
+                  href="/ingresar"
+                >
+                  Ingresá para ofertar o contactar
+                </Link>
+              ) : null}
+
+              {offerError ? (
+                <p className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
+                  {offerError}
+                </p>
+              ) : null}
+
+              {offerMessage ? (
+                <p className="rounded-xl border border-teal-200 bg-teal-50 px-3 py-2 text-xs text-teal-800">
+                  {offerMessage}
+                </p>
+              ) : null}
             </div>
           </div>
 

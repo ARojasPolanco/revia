@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 import {
   createListingSchema,
+  createOfferSchema,
   rejectListingSchema,
   reportListingSchema,
   updateListingSchema,
@@ -15,6 +16,7 @@ import {
 } from '../../middlewares/auth.js';
 import { listingPhotosUpload } from '../../middlewares/upload.js';
 import { validateBody } from '../../middlewares/validate.js';
+import * as offersController from '../offers/offers.controller.js';
 import * as controller from './listings.controller.js';
 
 const resolveReportSchema = z
@@ -88,6 +90,14 @@ listingsRouter.post(
   requireVerifiedEmail,
   validateBody(reportListingSchema),
   controller.reportListing
+);
+
+listingsRouter.post(
+  '/:id/offers',
+  protect,
+  requireVerifiedEmail,
+  validateBody(createOfferSchema),
+  offersController.createOffer
 );
 
 listingsRouter.get('/:id/favorite', protect, controller.getFavoriteStatus);
