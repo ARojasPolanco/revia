@@ -310,6 +310,10 @@ Reglas del cupón:
 
 Canales: in-app, push (Web Push) y email transaccional (Resend).
 
+- **Email:** solo verificación de cuenta, recuperación de contraseña y avisos críticos de seguridad.
+- **In-app + push:** eventos de operación, pagos, entregas, payouts, disputas y reputación.
+- **Comprobantes PDF:** se descargan desde la cuenta; no se envían automáticamente por email.
+
 Eventos mínimos:
 
 - Publicación aprobada o rechazada.

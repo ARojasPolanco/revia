@@ -20,6 +20,10 @@ Tablero vivo del proyecto. Se actualiza al empezar y al terminar cada tarea. Si 
 - Con sesión iniciada se priorizan chat y notificaciones con íconos; el acceso a cuenta usa engranaje de ajustes y no muestra el email.
 - Header por rol: vendedor con `Publicar` y `Mis publicaciones` visibles; comprador con chat, notificaciones y menú de compras.
 - Para vendedores, la barra de categorías solo se muestra en el home y desaparece al entrar a sus secciones.
+- Comprador: "Mis compras" es la acción principal del header; en Mi cuenta no ve categorías ni el formulario de cobros, sino el acceso a verificación para vender.
+- Admin/staff: home sin feed de productos ni categorías; muestra accesos a las áreas de trabajo según su rol.
+- Menú de cuenta admin solo con áreas internas; se agregó `/admin/ganancias` con tasas históricas, del mes y últimas comisiones.
+- Cobros del vendedor aceptan **alias** o CBU/CVU; finanzas ve el dato completo (con copiar) en la cola de payouts, mientras el vendedor sigue viendo la versión enmascarada.
 - Comprador: "Empezar a vender" lleva a verificación de identidad; el home ya no muestra el aviso permanente de KYC.
 - Home con scroll infinito sobre `/listings` paginado, deduplicación, spinner de carga inicial y de siguientes páginas, y reintento ante error.
 - Categorías globales bajo el header: mega-menú al hover en desktop (íconos + subcategorías) y pills directas en mobile.
@@ -373,7 +377,7 @@ Tablero vivo del proyecto. Se actualiza al empezar y al terminar cada tarea. Si 
 - [ ] Suscripción Web Push con VAPID y permiso explícito.
 - [ ] Envío de push para eventos críticos.
 - [ ] Poda de suscripciones 404/410.
-- [ ] Emails Resend: verificación, reset, orden, entrega, payout, disputa.
+- [ ] Emails Resend: solo verificación, reset y seguridad de cuenta. Operación, pagos, entregas, payouts y disputas van por in-app + push.
 - [ ] Página `/notificaciones` y preferencias.
 - [ ] Tests de push (mock) y emails.
 - [ ] Smoke en Android/desktop; documentar límites de iOS.

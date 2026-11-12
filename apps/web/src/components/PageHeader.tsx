@@ -111,6 +111,7 @@ export function PageHeader({
 const adminTabs = [
   { href: '/admin/publicaciones', label: 'Moderación', roles: ['admin', 'moderator'] },
   { href: '/admin/finanzas', label: 'Finanzas', roles: ['admin', 'finance'] },
+  { href: '/admin/ganancias', label: 'Ganancias', roles: ['admin', 'finance'] },
   { href: '/admin/disputas', label: 'Disputas', roles: ['admin', 'support'] },
   { href: '/admin/resenas', label: 'Reseñas', roles: ['admin', 'support'] },
 ];

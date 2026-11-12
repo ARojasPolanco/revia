@@ -12,6 +12,39 @@ function isStaffRole(role: string): boolean {
   return ['admin', 'moderator', 'support', 'finance'].includes(role);
 }
 
+const staffSections = [
+  {
+    href: '/admin/publicaciones',
+    title: 'Moderación',
+    body: 'Revisá, aprobá o rechazá publicaciones.',
+    roles: ['admin', 'moderator'],
+  },
+  {
+    href: '/admin/finanzas',
+    title: 'Finanzas',
+    body: 'Procesá payouts y conciliaciones.',
+    roles: ['admin', 'finance'],
+  },
+  {
+    href: '/admin/ganancias',
+    title: 'Ganancias',
+    body: 'Consultá las tasas cobradas por REVIA.',
+    roles: ['admin', 'finance'],
+  },
+  {
+    href: '/admin/disputas',
+    title: 'Disputas',
+    body: 'Resolvé reclamos dentro del SLA.',
+    roles: ['admin', 'support'],
+  },
+  {
+    href: '/admin/resenas',
+    title: 'Reseñas',
+    body: 'Moderá reportes de reseñas.',
+    roles: ['admin', 'support'],
+  },
+];
+
 export default function HomePage() {
   const { user, loading } = useAuth();
 
@@ -49,6 +82,9 @@ export default function HomePage() {
 
   const staff = isStaffRole(user.role);
   const seller = !staff && (user.sellerVerified || user.kycStatus === 'approved');
+  const staffLinks = staff
+    ? staffSections.filter((section) => section.roles.includes(user.role))
+    : [];
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-6xl flex-col gap-8 px-5 py-8 sm:py-10">
@@ -104,7 +140,33 @@ export default function HomePage() {
         </section>
       ) : null}
 
-      <HomeFeed />
+      {staff ? (
+        <section className="flex flex-col gap-4">
+          <div>
+            <h2 className="text-sm font-bold uppercase tracking-wide text-neutral-500">
+              Áreas de trabajo
+            </h2>
+            <p className="mt-1 text-sm text-neutral-600">
+              Accedé directamente a las tareas de tu rol.
+            </p>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            {staffLinks.map((section) => (
+              <Link
+                className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm transition-colors hover:border-teal-300 hover:bg-teal-50/30"
+                href={section.href}
+                key={section.href}
+              >
+                <h3 className="text-base font-bold text-neutral-900">{section.title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-neutral-600">{section.body}</p>
+              </Link>
+            ))}
+          </div>
+        </section>
+      ) : (
+        <HomeFeed />
+      )}
     </main>
   );
 }

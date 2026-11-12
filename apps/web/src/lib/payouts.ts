@@ -14,6 +14,7 @@ export type { PayoutBlockReason, PayoutStatus };
 export interface PayoutAccountView {
   method: string;
   accountMasked: string;
+  accountFull?: string;
   holderName: string;
   holderMatchesKyc: boolean;
   status: string;
@@ -50,6 +51,22 @@ export interface Payout {
   seller: PublicSeller | null;
   account: PayoutAccountView | null;
   events: PayoutEventView[];
+}
+
+export interface PlatformEarnings {
+  totalTasaArs: number;
+  monthTasaArs: number;
+  totalOrders: number;
+  monthOrders: number;
+  averageTasaArs: number;
+  lastOrders: {
+    id: string;
+    title: string;
+    completedAt: string | null;
+    itemPriceArs: number;
+    totalAmountArs: number;
+    tasaAmountArs: number;
+  }[];
 }
 
 export interface PayoutSummary {

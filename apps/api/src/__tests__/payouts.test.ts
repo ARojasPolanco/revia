@@ -213,11 +213,13 @@ describe('payouts manuales, bloqueos y finanzas', () => {
     const sellerPayouts = await seller.get('/api/v1/me/payouts');
     const payoutId = sellerPayouts.body.payouts[0].id as string;
     expect(sellerPayouts.body.payouts[0].blockReason).toBeNull();
+    expect(sellerPayouts.body.payouts[0].account.accountFull).toBeUndefined();
 
     const queue = await finance.get('/api/v1/admin/payouts?status=pending');
     expect(queue.status).toBe(200);
     expect(queue.body.payouts).toHaveLength(1);
     expect(queue.body.payouts[0].account.accountMasked).toBeTruthy();
+    expect(queue.body.payouts[0].account.accountFull).toBe('revia.fase7.cobros');
 
     const processing = await finance.post(`/api/v1/admin/payouts/${payoutId}/processing`);
     expect(processing.status).toBe(200);
@@ -251,6 +253,12 @@ describe('payouts manuales, bloqueos y finanzas', () => {
     const financeSummary = await finance.get('/api/v1/admin/payouts/summary');
     expect(financeSummary.body.summary.paidCount).toBe(1);
     expect(financeSummary.body.summary.paidAmountArs).toBe(15_000);
+
+    const earnings = await finance.get('/api/v1/admin/payouts/earnings');
+    expect(earnings.status).toBe(200);
+    expect(earnings.body.earnings.totalTasaArs).toBe(1_550);
+    expect(earnings.body.earnings.totalOrders).toBe(1);
+    expect(earnings.body.earnings.lastOrders[0].tasaAmountArs).toBe(1_550);
   });
 
   it('bloquea el procesamiento sin cuenta y lo desbloquea al configurarla', async () => {

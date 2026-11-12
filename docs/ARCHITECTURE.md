@@ -202,7 +202,7 @@ En desarrollo, las fotos de publicaciones se guardan en `apps/api/uploads/listin
 - **Chat:** polling cada 3–5 s con `GET /conversations/:id/messages?after=...`. Sin WebSocket ni SSE en el MVP.
 - **Notificaciones in-app:** polling cada 30 s o al recuperar foco.
 - **Push:** `web-push` + VAPID + service worker. Se pide permiso solo con gesto explícito. Se podan suscripciones con 404/410.
-- **Email:** Resend para eventos críticos y verificación/reset.
+- **Email:** Resend solo para verificación, reset y seguridad de cuenta. Los eventos de operación van por in-app + push; los comprobantes se descargan bajo demanda.
 - Se persiste la notificación antes de enviar push.
 - Si el usuario estaba desconectado, recupera por API.
 

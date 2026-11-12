@@ -31,6 +31,7 @@ adminPayoutsRouter.use(protect, restrictTo('finance', 'admin'));
 
 adminPayoutsRouter.get('/', controller.listFinance);
 adminPayoutsRouter.get('/summary', controller.getFinanceSummary);
+adminPayoutsRouter.get('/earnings', controller.getPlatformEarnings);
 adminPayoutsRouter.post('/reconcile', controller.reconcile);
 adminPayoutsRouter.post('/:id/processing', controller.markProcessing);
 adminPayoutsRouter.post('/:id/mark-paid', validateBody(payoutPaidSchema), controller.markPaid);

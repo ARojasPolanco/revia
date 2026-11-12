@@ -36,3 +36,6 @@ desktop.ini
 # Misc
 .turbo/
 *.tsbuildinfo
+
+# Marketing local / propuestas visuales
+marketing/

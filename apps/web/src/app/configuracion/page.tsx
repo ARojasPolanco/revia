@@ -21,6 +21,7 @@ const buttonClass =
 
 interface PayoutView {
   configured: boolean;
+  method?: string;
   accountMasked?: string;
   holderName?: string;
   holderMatchesKyc?: boolean;
@@ -53,6 +54,7 @@ function SettingsContent() {
   const [avatarError, setAvatarError] = useState<string | null>(null);
   const [avatarMessage, setAvatarMessage] = useState<string | null>(null);
 
+  const [payoutMethod, setPayoutMethod] = useState<'alias' | 'cbu'>('alias');
   const [payoutAccount, setPayoutAccount] = useState('');
   const [payoutHolder, setPayoutHolder] = useState('');
   const [payoutView, setPayoutView] = useState<PayoutView | null>(null);
@@ -75,7 +77,13 @@ function SettingsContent() {
     }
 
     apiFetch<{ payoutAccount: PayoutView }>('/me/payout-account')
-      .then((data) => setPayoutView(data.payoutAccount))
+      .then((data) => {
+        setPayoutView(data.payoutAccount);
+
+        if (data.payoutAccount.configured) {
+          setPayoutMethod(data.payoutAccount.method === 'alias' ? 'alias' : 'cbu');
+        }
+      })
       .catch(() => setPayoutView(null));
   }, [user]);
 
@@ -169,12 +177,13 @@ function SettingsContent() {
       const data = await apiFetch<{ payoutAccount: PayoutView }>('/me/payout-account', {
         method: 'PUT',
         body: JSON.stringify({
-          method: 'cbu',
+          method: payoutMethod,
           account: payoutAccount,
           holderName: payoutHolder,
         }),
       });
       setPayoutView(data.payoutAccount);
+      setPayoutMethod(data.payoutAccount.method === 'alias' ? 'alias' : 'cbu');
       setPayoutAccount('');
       setPayoutMessage(
         data.payoutAccount.holderMatchesKyc
@@ -208,6 +217,9 @@ function SettingsContent() {
   }
 
   const kycApproved = user?.kycStatus === 'approved';
+  const isStaff = Boolean(user && ['admin', 'moderator', 'support', 'finance'].includes(user.role));
+  const isSeller = Boolean(user && !isStaff && (user.sellerVerified || kycApproved));
+  const verificationPending = user?.kycStatus === 'pending' || user?.kycStatus === 'manual_review';
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-2xl flex-col gap-6 px-5 py-12">
@@ -217,7 +229,11 @@ function SettingsContent() {
             Cerrar sesión
           </ActionButton>
         }
-        description="Perfil, verificación, cobros y preferencias de tu cuenta."
+        description={
+          isSeller
+            ? 'Perfil, verificación, cobros y preferencias de tu cuenta.'
+            : 'Perfil, verificación y preferencias de tu cuenta.'
+        }
         title="Mi cuenta"
       />
 
@@ -304,80 +320,123 @@ function SettingsContent() {
         ) : null}
       </section>
 
-      <section className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
-        <h2 className="text-sm font-bold text-neutral-900">Cobros</h2>
+      {isSeller ? (
+        <section className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
+          <h2 className="text-sm font-bold text-neutral-900">Cobros</h2>
 
-        {!kycApproved ? (
-          <p className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
-            Primero completá tu{' '}
-            <Link className="font-semibold underline" href="/verificacion">
-              Verificación de REVIA
-            </Link>
-            . Es obligatoria para cobrar.
+          {!kycApproved ? (
+            <p className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+              Primero completá tu{' '}
+              <Link className="font-semibold underline" href="/verificacion">
+                Verificación de REVIA
+              </Link>
+              . Es obligatoria para cobrar.
+            </p>
+          ) : null}
+
+          {payoutView?.configured ? (
+            <div className="mt-3 rounded-xl border border-neutral-200 bg-neutral-50 p-3 text-sm text-neutral-700">
+              <p>
+                {payoutView.method === 'alias' ? 'Alias' : 'CBU/CVU'} actual:{' '}
+                <strong>{payoutView.accountMasked}</strong>
+              </p>
+              <p>Titular: {payoutView.holderName}</p>
+              <p>
+                Estado: {payoutView.status === 'active' ? 'Activa' : 'En revisión por titularidad'}
+              </p>
+            </div>
+          ) : null}
+
+          <form className="mt-4 flex flex-col gap-4" onSubmit={handleSavePayout}>
+            <label className="flex flex-col">
+              <span className={labelClass}>Método de cobro</span>
+              <select
+                className={inputClass}
+                value={payoutMethod}
+                onChange={(event) => {
+                  setPayoutMethod(event.target.value === 'alias' ? 'alias' : 'cbu');
+                  setPayoutAccount('');
+                }}
+                disabled={!kycApproved}
+              >
+                <option value="alias">Alias</option>
+                <option value="cbu">CBU / CVU</option>
+              </select>
+            </label>
+
+            <label className="flex flex-col">
+              <span className={labelClass}>
+                {payoutMethod === 'alias' ? 'Alias' : 'CBU o CVU'}
+                <InfoTooltip
+                  text={
+                    payoutMethod === 'alias'
+                      ? 'Ingresá tu alias de billetera o cuenta bancaria. Es la opción más simple para transferirte.'
+                      : 'Podés ingresar un CBU bancario o un CVU de billetera virtual (por ejemplo, Mercado Pago). Siempre son 22 dígitos.'
+                  }
+                />
+              </span>
+              <input
+                className={inputClass}
+                value={payoutAccount}
+                onChange={(event) => setPayoutAccount(event.target.value)}
+                placeholder={
+                  payoutMethod === 'alias' ? 'Ejemplo: revia.cobros' : '22 dígitos del CBU o CVU'
+                }
+                inputMode={payoutMethod === 'alias' ? 'text' : 'numeric'}
+                maxLength={payoutMethod === 'alias' ? 20 : 22}
+                required
+                disabled={!kycApproved}
+              />
+            </label>
+
+            <label className="flex flex-col">
+              <span className={labelClass}>Titular de la cuenta</span>
+              <input
+                className={inputClass}
+                value={payoutHolder}
+                onChange={(event) => setPayoutHolder(event.target.value)}
+                required
+                minLength={3}
+                maxLength={120}
+                disabled={!kycApproved}
+              />
+            </label>
+
+            {payoutError ? (
+              <p className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                {payoutError}
+              </p>
+            ) : null}
+
+            {payoutMessage ? (
+              <p className="rounded-xl border border-teal-200 bg-teal-50 px-3 py-2 text-sm text-teal-800">
+                {payoutMessage}
+              </p>
+            ) : null}
+
+            <button className={buttonClass} type="submit" disabled={!kycApproved || payoutLoading}>
+              {payoutLoading ? 'Guardando.' : 'Guardar datos de cobro'}
+            </button>
+          </form>
+        </section>
+      ) : !isStaff ? (
+        <section className="rounded-2xl border border-teal-200 bg-teal-50 p-5">
+          <h2 className="text-sm font-bold text-teal-950">
+            {verificationPending ? 'Verificación en revisión' : '¿Querés empezar a vender?'}
+          </h2>
+          <p className="mt-2 text-sm leading-relaxed text-teal-900">
+            {verificationPending
+              ? 'Estamos revisando tu identidad. Cuando se apruebe vas a poder publicar y cobrar tus ventas.'
+              : 'Para publicar artículos y cobrar tus ventas necesitás completar la Verificación de REVIA.'}
           </p>
-        ) : null}
-
-        {payoutView?.configured ? (
-          <div className="mt-3 rounded-xl border border-neutral-200 bg-neutral-50 p-3 text-sm text-neutral-700">
-            <p>
-              Cuenta actual: <strong>{payoutView.accountMasked}</strong>
-            </p>
-            <p>Titular: {payoutView.holderName}</p>
-            <p>
-              Estado: {payoutView.status === 'active' ? 'Activa' : 'En revisión por titularidad'}
-            </p>
-          </div>
-        ) : null}
-
-        <form className="mt-4 flex flex-col gap-4" onSubmit={handleSavePayout}>
-          <label className="flex flex-col">
-            <span className={labelClass}>
-              CBU o CVU
-              <InfoTooltip text="Podés ingresar un CBU bancario o un CVU de billetera virtual (por ejemplo, Mercado Pago). Siempre son 22 dígitos." />
-            </span>
-            <input
-              className={inputClass}
-              value={payoutAccount}
-              onChange={(event) => setPayoutAccount(event.target.value)}
-              placeholder="22 dígitos del CBU o CVU"
-              inputMode="numeric"
-              maxLength={22}
-              required
-              disabled={!kycApproved}
-            />
-          </label>
-
-          <label className="flex flex-col">
-            <span className={labelClass}>Titular de la cuenta</span>
-            <input
-              className={inputClass}
-              value={payoutHolder}
-              onChange={(event) => setPayoutHolder(event.target.value)}
-              required
-              minLength={3}
-              maxLength={120}
-              disabled={!kycApproved}
-            />
-          </label>
-
-          {payoutError ? (
-            <p className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-              {payoutError}
-            </p>
-          ) : null}
-
-          {payoutMessage ? (
-            <p className="rounded-xl border border-teal-200 bg-teal-50 px-3 py-2 text-sm text-teal-800">
-              {payoutMessage}
-            </p>
-          ) : null}
-
-          <button className={buttonClass} type="submit" disabled={!kycApproved || payoutLoading}>
-            {payoutLoading ? 'Guardando…' : 'Guardar datos de cobro'}
-          </button>
-        </form>
-      </section>
-
+          <Link
+            className="mt-4 inline-flex min-h-11 items-center justify-center rounded-xl bg-teal-700 px-4 text-sm font-semibold text-white hover:bg-teal-800"
+            href="/verificacion"
+          >
+            {verificationPending ? 'Ver estado de verificación' : 'Iniciar verificación'}
+          </Link>
+        </section>
+      ) : null}
       <section className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
         <h2 className="text-sm font-bold text-neutral-900">Perfil público</h2>
 

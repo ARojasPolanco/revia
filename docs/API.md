@@ -223,14 +223,15 @@ Estados: `pending_payment`, `payment_review`, `paid`, `handover_pending`, `deliv
 
 ### Finanzas
 
-| Método | Ruta                             | Rol           | Descripción                                 |
-| ------ | -------------------------------- | ------------- | ------------------------------------------- |
-| GET    | `/admin/payouts?status=`         | finance/admin | Cola de payouts.                            |
-| GET    | `/admin/payouts/summary`         | finance/admin | Totales, bloqueados y fuera de SLA.         |
-| POST   | `/admin/payouts/:id/processing`  | finance/admin | Pasa a `processing` si no está bloqueado.   |
-| POST   | `/admin/payouts/:id/mark-paid`   | finance/admin | Marca `paid` + `operationId` y comprobante. |
-| POST   | `/admin/payouts/:id/mark-failed` | finance/admin | Marca `failed` + motivo.                    |
-| POST   | `/admin/payouts/reconcile`       | finance/admin | Ejecuta conciliación Talo vs pagos locales. |
+| Método | Ruta                             | Rol           | Descripción                                      |
+| ------ | -------------------------------- | ------------- | ------------------------------------------------ |
+| GET    | `/admin/payouts?status=`         | finance/admin | Cola de payouts.                                 |
+| GET    | `/admin/payouts/summary`         | finance/admin | Totales, bloqueados y fuera de SLA.              |
+| GET    | `/admin/payouts/earnings`        | finance/admin | Tasas de REVIA reconocidas y últimas comisiones. |
+| POST   | `/admin/payouts/:id/processing`  | finance/admin | Pasa a `processing` si no está bloqueado.        |
+| POST   | `/admin/payouts/:id/mark-paid`   | finance/admin | Marca `paid` + `operationId` y comprobante.      |
+| POST   | `/admin/payouts/:id/mark-failed` | finance/admin | Marca `failed` + motivo.                         |
+| POST   | `/admin/payouts/reconcile`       | finance/admin | Ejecuta conciliación Talo vs pagos locales.      |
 
 `mark-paid` body:
 

@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { formatArs } from '@/lib/listings';
 import { formatDateTime } from '@/lib/orders';
 import { payoutEventLabel, payoutStatusLabel, type Payout } from '@/lib/payouts';
@@ -13,9 +14,26 @@ interface Props {
 }
 
 export function FinancePayoutCard({ payout, busy, onProcessing, onPaid, onFailed }: Props) {
+  const [copied, setCopied] = useState(false);
   const latestEvent = payout.events[payout.events.length - 1];
   const canProcess = !payout.blockReason && ['pending', 'failed'].includes(payout.status);
   const canClose = payout.status === 'processing' && !payout.blockReason;
+  const accountLabel = payout.account?.method === 'alias' ? 'Alias' : 'CBU / CVU';
+  const accountValue = payout.account?.accountFull ?? payout.account?.accountMasked ?? null;
+
+  async function copyAccount() {
+    if (!accountValue) {
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(accountValue);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2_000);
+    } catch {
+      setCopied(false);
+    }
+  }
 
   return (
     <article className="flex flex-col gap-3 rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm">
@@ -40,13 +58,21 @@ export function FinancePayoutCard({ payout, busy, onProcessing, onPaid, onFailed
       <div className="grid gap-2 text-xs text-neutral-600 sm:grid-cols-2">
         <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-3">
           <p className="font-semibold uppercase tracking-wide text-neutral-400">Cuenta de cobro</p>
-          <p className="mt-1 font-medium text-neutral-800">
-            {payout.account
-              ? `${payout.account.method.toUpperCase()} ${payout.account.accountMasked}`
-              : 'No configurada'}
+          <p className="mt-1 text-[11px] font-semibold text-neutral-500">{accountLabel}</p>
+          <p className="mt-0.5 break-all font-mono text-sm font-bold text-neutral-900">
+            {accountValue ?? 'No configurada'}
           </p>
-          <p className="text-[11px] text-neutral-500">
-            Titular: {payout.account?.holderName ?? '-'} ·{' '}
+          {accountValue ? (
+            <button
+              className="mt-1 text-[11px] font-semibold text-teal-700 hover:text-teal-800"
+              type="button"
+              onClick={() => void copyAccount()}
+            >
+              {copied ? 'Copiado' : 'Copiar dato'}
+            </button>
+          ) : null}
+          <p className="mt-1 text-[11px] text-neutral-500">
+            Titular: {payout.account?.holderName ?? '-'} �{' '}
             {payout.account?.holderMatchesKyc ? 'Coincide con KYC' : 'Revisar titular'}
           </p>
         </div>

@@ -88,10 +88,16 @@ npm run dev
 
 # 6. Web en desarrollo
 npm run dev:web
+
+# Alternativa: liberar 3000/3001/4000 y levantar API + web juntos
+npm run dev:all
 ```
 
 - API: `http://localhost:4000`
 - Web: `http://localhost:3000`
+- `npm run dev:free` solo detiene procesos del proyecto en esos puertos y limpia `.next` siempre antes de volver a levantar.
+- No combines `dev:all` con `dev`/`dev:web`. Si usás dos terminales, ejecutá `npm run dev:free` primero y luego `npm run dev` + `npm run dev:web`.
+- Si 3000 o 4000 ya están ocupados, los comandos `dev`/`dev:web` abortan con un mensaje en vez de saltar a otro puerto.
 - PostgreSQL: `localhost:5433`
 - Base de test: `revia_test`
 
@@ -104,6 +110,8 @@ npm run dev:web
 | `npm run docker:app`      | Levanta PostgreSQL + API + web en Docker.                |
 | `npm run dev`             | API en desarrollo.                                       |
 | `npm run dev:web`         | Next.js en desarrollo.                                   |
+| `npm run dev:free`        | Libera 3000/3001/4000 del proyecto y limpia `.next`.     |
+| `npm run dev:all`         | Libera puertos y levanta API + web juntos.               |
 | `npm run build`           | Build de API y web.                                      |
 | `npm run lint`            | ESLint.                                                  |
 | `npm run test`            | Tests de API.                                            |

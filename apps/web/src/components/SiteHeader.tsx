@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Bell, CircleHelp, LogOut, Mail, Package, Settings } from 'lucide-react';
+import { Bell, CircleHelp, LogOut, Mail, Package, Settings, ShoppingBag } from 'lucide-react';
 import { useAuth } from './AuthProvider';
 import { useDialog } from './DialogProvider';
 import { SiteCategories } from './SiteCategories';
@@ -28,15 +28,13 @@ const sellerMenuLinks = [
   { href: '/disputas', label: 'Disputas' },
 ];
 
-function adminHref(role: string): string {
-  if (role === 'finance') {
-    return '/admin/finanzas';
-  }
-  if (role === 'support') {
-    return '/admin/disputas';
-  }
-  return '/admin/publicaciones';
-}
+const staffMenuLinks = [
+  { href: '/admin/publicaciones', label: 'Moderación', roles: ['admin', 'moderator'] },
+  { href: '/admin/finanzas', label: 'Finanzas', roles: ['admin', 'finance'] },
+  { href: '/admin/ganancias', label: 'Ganancias', roles: ['admin', 'finance'] },
+  { href: '/admin/disputas', label: 'Disputas', roles: ['admin', 'support'] },
+  { href: '/admin/resenas', label: 'Reseñas', roles: ['admin', 'support'] },
+];
 
 export function SiteHeader() {
   const pathname = usePathname();
@@ -49,8 +47,14 @@ export function SiteHeader() {
   const isSeller = Boolean(
     user && !isStaff && (user.sellerVerified || user.kycStatus === 'approved')
   );
-  const menuLinks = isSeller ? sellerMenuLinks : buyerMenuLinks;
-  const showCategories = !isSeller || pathname === '/';
+  const staffLinks = user
+    ? staffMenuLinks
+        .filter((item) => item.roles.includes(user.role))
+        .map(({ href, label }) => ({ href, label }))
+    : [];
+  const menuLinks = isStaff ? staffLinks : isSeller ? sellerMenuLinks : buyerMenuLinks;
+  const showCategories =
+    !isStaff && (pathname === '/' || (!isSeller && pathname !== '/configuracion'));
 
   useEffect(() => {
     setAccountOpen(false);
@@ -167,6 +171,18 @@ export function SiteHeader() {
             </>
           ) : null}
 
+          {!loading && user && !isSeller && !isStaff ? (
+            <Link
+              className="inline-flex items-center gap-2 rounded-xl bg-teal-700 px-2.5 py-2 text-sm font-semibold text-white hover:bg-teal-800"
+              href="/compras"
+              title="Mis compras"
+            >
+              <ShoppingBag className="h-4 w-4" strokeWidth={1.75} />
+              <span className="hidden sm:inline">Mis compras</span>
+              <span className="sm:hidden">Compras</span>
+            </Link>
+          ) : null}
+
           {!loading && user ? (
             <>
               <Link
@@ -220,16 +236,6 @@ export function SiteHeader() {
                     >
                       Mi cuenta
                     </Link>
-                    {isStaff ? (
-                      <Link
-                        className="flex min-h-9 items-center rounded-lg px-2.5 text-sm font-semibold text-neutral-700 hover:bg-neutral-50"
-                        href={adminHref(user.role)}
-                        role="menuitem"
-                        onClick={() => setAccountOpen(false)}
-                      >
-                        Panel
-                      </Link>
-                    ) : null}
                     {menuLinks.map((item) => (
                       <Link
                         className="flex min-h-9 items-center rounded-lg px-2.5 text-sm font-semibold text-neutral-700 hover:bg-neutral-50"

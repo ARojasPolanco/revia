@@ -87,6 +87,15 @@ export const getFinanceSummary = catchAsync(async (_req: Request, res: Response)
   });
 });
 
+export const getPlatformEarnings = catchAsync(async (_req: Request, res: Response) => {
+  const earnings = await payoutRecords.getPlatformEarnings();
+
+  res.status(200).json({
+    status: 'success',
+    earnings,
+  });
+});
+
 export const markProcessing = catchAsync(async (req: Request, res: Response) => {
   const payout = await payoutRecords.markPayoutProcessing(req.user!.id, parseId(req.params.id));
 

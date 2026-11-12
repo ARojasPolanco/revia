@@ -403,3 +403,11 @@ Formato: `D-XXX · fecha · estado`. Estados: `aceptada`, `revisar`, `reemplazad
 - Contexto: la reputación es parte de la confianza y debe poder moderarse.
 - Decisión: comprador y vendedor pueden reseñar una orden completada dentro de 30 días, una vez por autor. Las reseñas son públicas, tienen promedio y pueden ocultarse tras una denuncia.
 - Consecuencias: reputación visible y auditable; no hay edición de reseñas, solo ocultamiento por moderación.
+
+## D-051 - 2026-11-12 - aceptada
+
+**Email solo para cuenta y seguridad; operación por push/in-app.**
+
+- Contexto: enviar un email por cada compra, pago, entrega o payout satura el servicio de mails y duplica las notificaciones.
+- Decisión: Resend se reserva para verificación de email, recuperación de contraseña y avisos críticos de seguridad. Los eventos de operación se notifican in-app y por Web Push. Los comprobantes PDF se descargan desde la cuenta y no se envían automáticamente.
+- Consecuencias: menor volumen de emails, una sola fuente de verdad para eventos operativos y menos riesgo de spam.

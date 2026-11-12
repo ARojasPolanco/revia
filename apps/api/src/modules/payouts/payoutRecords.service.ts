@@ -1,5 +1,5 @@
 import { Op } from 'sequelize';
-import type { Includeable, Transaction } from 'sequelize';
+import type { Includeable, Transaction, WhereOptions } from 'sequelize';
 import { DEFAULTS, PAYOUT_BLOCK_REASON_LABELS, type PayoutBlockReason } from '@revia/shared';
 import { sequelize } from '../../config/database.js';
 import { logger } from '../../config/logger.js';
@@ -24,6 +24,7 @@ const PAYOUT_SLA_BUSINESS_DAYS = Math.max(1, Math.ceil(DEFAULTS.payoutSlaBusines
 export interface PayoutAccountView {
   method: string;
   accountMasked: string;
+  accountFull?: string;
   holderName: string;
   holderMatchesKyc: boolean;
   status: string;
@@ -73,6 +74,22 @@ export interface PayoutSummaryView {
   blockedCount: number;
   overdueCount: number;
   nextDueAt: Date | null;
+}
+
+export interface PlatformEarningsView {
+  totalTasaArs: number;
+  monthTasaArs: number;
+  totalOrders: number;
+  monthOrders: number;
+  averageTasaArs: number;
+  lastOrders: {
+    id: string;
+    title: string;
+    completedAt: Date | null;
+    itemPriceArs: number;
+    totalAmountArs: number;
+    tasaAmountArs: number;
+  }[];
 }
 
 export interface ReconciliationResult {
@@ -131,7 +148,10 @@ function addPayoutEvent(
   return PayoutEvent.create({ payoutId, type, actorId, data }, { transaction });
 }
 
-function accountView(account: PayoutAccount | null | undefined): PayoutAccountView | null {
+function accountView(
+  account: PayoutAccount | null | undefined,
+  revealFull = false
+): PayoutAccountView | null {
   if (!account) {
     return null;
   }
@@ -142,6 +162,7 @@ function accountView(account: PayoutAccount | null | undefined): PayoutAccountVi
     return {
       method: account.method,
       accountMasked: maskPayoutAccount(account.method, raw),
+      ...(revealFull ? { accountFull: raw } : {}),
       holderName: account.holderName,
       holderMatchesKyc: account.holderMatchesKyc,
       status: account.status,
@@ -151,7 +172,7 @@ function accountView(account: PayoutAccount | null | undefined): PayoutAccountVi
   }
 }
 
-function toPayoutView(payout: Payout): PayoutView {
+function toPayoutView(payout: Payout, revealAccount = false): PayoutView {
   const related = payout as PayoutWithRelations;
   const blockReason = (payout.blockReason as PayoutBlockReason | null) ?? null;
 
@@ -176,7 +197,7 @@ function toPayoutView(payout: Payout): PayoutView {
       completedAt: related.order?.completedAt ?? null,
     },
     seller: related.seller ? toPublicUser(related.seller) : null,
-    account: accountView(related.account),
+    account: accountView(related.account, revealAccount),
     events: (related.events ?? []).map((event) => ({
       id: event.id,
       type: event.type,
@@ -400,7 +421,7 @@ export async function listSellerPayouts(userId: string): Promise<PayoutView[]> {
     limit: 100,
   });
 
-  return refreshed.map(toPayoutView);
+  return refreshed.map((payout) => toPayoutView(payout));
 }
 
 export async function getSellerSummary(userId: string): Promise<PayoutSummaryView> {
@@ -428,7 +449,7 @@ export async function listFinancePayouts(status?: string): Promise<PayoutView[]>
     limit: 200,
   });
 
-  return refreshed.map(toPayoutView);
+  return refreshed.map((payout) => toPayoutView(payout, true));
 }
 
 export async function getFinanceSummary(): Promise<PayoutSummaryView> {
@@ -436,6 +457,69 @@ export async function getFinanceSummary(): Promise<PayoutSummaryView> {
   const payouts = await Payout.findAll();
 
   return summarize(payouts);
+}
+
+function startOfArtMonth(now: Date): Date {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Argentina/Buenos_Aires',
+    year: 'numeric',
+    month: '2-digit',
+  }).formatToParts(now);
+  const year = parts.find((part) => part.type === 'year')?.value;
+  const month = parts.find((part) => part.type === 'month')?.value;
+
+  return new Date(`${year}-${month}-01T00:00:00-03:00`);
+}
+
+export async function getPlatformEarnings(): Promise<PlatformEarningsView> {
+  const baseWhere: WhereOptions = {
+    status: { [Op.in]: ['completed', 'payout_pending', 'paid_out'] },
+    completedAt: { [Op.not]: null },
+  };
+  const monthStart = startOfArtMonth(new Date());
+  const monthWhere: WhereOptions = {
+    ...baseWhere,
+    completedAt: { [Op.gte]: monthStart },
+  };
+
+  const [totalTasaArs, totalOrders, monthTasaArs, monthOrders, lastOrders] = await Promise.all([
+    Order.sum('tasaAmountArs', { where: baseWhere }),
+    Order.count({ where: baseWhere }),
+    Order.sum('tasaAmountArs', { where: monthWhere }),
+    Order.count({ where: monthWhere }),
+    Order.findAll({
+      where: baseWhere,
+      attributes: [
+        'id',
+        'listingTitleSnapshot',
+        'completedAt',
+        'itemPriceArs',
+        'totalAmountArs',
+        'tasaAmountArs',
+      ],
+      order: [['completedAt', 'DESC']],
+      limit: 10,
+    }),
+  ]);
+
+  const total = Number(totalTasaArs ?? 0);
+  const count = Number(totalOrders ?? 0);
+
+  return {
+    totalTasaArs: total,
+    monthTasaArs: Number(monthTasaArs ?? 0),
+    totalOrders: count,
+    monthOrders: Number(monthOrders ?? 0),
+    averageTasaArs: count > 0 ? Math.round(total / count) : 0,
+    lastOrders: lastOrders.map((order) => ({
+      id: order.id,
+      title: order.listingTitleSnapshot,
+      completedAt: order.completedAt,
+      itemPriceArs: order.itemPriceArs,
+      totalAmountArs: order.totalAmountArs,
+      tasaAmountArs: order.tasaAmountArs,
+    })),
+  };
 }
 
 function summarize(payouts: Payout[]): PayoutSummaryView {

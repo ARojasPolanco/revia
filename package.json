@@ -12,8 +12,12 @@
     "npm": ">=10"
   },
   "scripts": {
+    "predev": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/assert-dev-port.ps1 -Port 4000",
     "dev": "npm run build:shared && npm run dev -w @revia/api",
+    "predev:web": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/assert-dev-port.ps1 -Port 3000",
     "dev:web": "npm run build:shared && npm run dev -w @revia/web",
+    "dev:free": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/free-dev-ports.ps1",
+    "dev:all": "npm run dev:free && npm run build:shared && concurrently -k -n api,web -c cyan,green \"npm run dev -w @revia/api\" \"npm run dev -w @revia/web\"",
     "build": "npm run build:shared && npm run build -w @revia/api && npm run build -w @revia/web",
     "build:shared": "npm run build -w @revia/shared",
     "build:api": "npm run build:shared && npm run build -w @revia/api",
@@ -48,6 +52,7 @@
     "@commitlint/cli": "^19.6.0",
     "@commitlint/config-conventional": "^19.6.0",
     "@eslint/js": "^9.17.0",
+    "concurrently": "^10.0.7",
     "eslint": "^9.17.0",
     "eslint-config-prettier": "^10.0.1",
     "eslint-plugin-react": "^7.37.2",
