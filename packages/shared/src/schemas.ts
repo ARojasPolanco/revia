@@ -1,6 +1,8 @@
 import { z } from 'zod';
 import {
   DELIVERY_MODES,
+  DISPUTE_REASONS,
+  DISPUTE_RESOLUTIONS,
   LISTING_CONDITIONS,
   PAYOUT_METHODS,
   PAYOUT_STATUSES,
@@ -164,6 +166,7 @@ export const orderQuoteSchema = z
   .object({
     listingId: uuidSchema,
     offerId: uuidSchema.optional(),
+    couponId: uuidSchema.optional(),
     deliveryMode: deliveryModeSchema,
   })
   .strict();
@@ -194,5 +197,54 @@ export const payoutFailedSchema = z
 export const payoutListQuerySchema = z
   .object({
     status: z.enum(PAYOUT_STATUSES).optional(),
+  })
+  .strict();
+
+export const openDisputeSchema = z
+  .object({
+    reason: z.enum(DISPUTE_REASONS),
+    description: z.string().trim().min(20).max(2000),
+  })
+  .strict();
+
+export const disputeMessageSchema = z
+  .object({
+    body: z.string().trim().min(1).max(2000),
+  })
+  .strict();
+
+export const disputeEvidenceSchema = z
+  .object({
+    kind: z.enum(['image', 'video', 'text', 'link']),
+    url: z.string().url().max(1000).optional(),
+    body: z.string().trim().min(1).max(2000).optional(),
+  })
+  .strict()
+  .refine((value) => Boolean(value.url) || Boolean(value.body), {
+    message: 'Agregá un enlace o una descripción.',
+  });
+
+export const disputeOfferSchema = z
+  .object({
+    type: z.enum(['partial_refund', 'cover_return']),
+    amountArs: moneyArsSchema.optional(),
+  })
+  .strict()
+  .refine((value) => value.type !== 'partial_refund' || typeof value.amountArs === 'number', {
+    message: 'Indicá el monto del reembolso parcial.',
+  });
+
+export const resolveDisputeSchema = z
+  .object({
+    resolution: z.enum(DISPUTE_RESOLUTIONS),
+    notes: z.string().trim().max(2000).optional(),
+    amountArs: moneyArsSchema.optional(),
+  })
+  .strict();
+
+export const createReviewSchema = z
+  .object({
+    rating: z.number().int().min(1).max(5),
+    comment: z.string().trim().max(1000).optional(),
   })
   .strict();

@@ -11,6 +11,8 @@
 html,
 body {
   min-height: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 body {
@@ -26,8 +28,85 @@ body {
     Arial,
     sans-serif;
   -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
 }
 
 a {
   color: inherit;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  max-width: 100%;
+}
+
+button:not(:disabled) {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+img,
+video {
+  max-width: 100%;
+}
+
+:focus-visible {
+  outline: 2px solid #0f766e;
+  outline-offset: 2px;
+}
+
+:is(button, a).bg-teal-700,
+:is(button, a).bg-teal-800,
+:is(button, a).bg-red-700,
+:is(button, a).bg-red-800,
+:is(button, a).bg-neutral-800,
+:is(button, a).bg-neutral-900 {
+  color: #ffffff;
+}
+
+@keyframes dialog-overlay-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes dialog-content-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.dialog-overlay[data-state='open'] {
+  animation: dialog-overlay-in 150ms ease-out;
+}
+
+.dialog-content[data-state='open'] {
+  animation: dialog-content-in 180ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dialog-overlay[data-state='open'],
+  .dialog-content[data-state='open'] {
+    animation: none;
+  }
+}
+
+@media (max-width: 640px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
 }

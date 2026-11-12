@@ -77,6 +77,31 @@ describe('auth', () => {
     expect(me.body.user.email).toBe(baseUser.email);
   });
 
+  it('cierra la sesión y elimina la cookie de acceso', async () => {
+    const registration = await registerUser();
+    await request(app)
+      .post('/api/v1/auth/verify-email')
+      .send({ token: registration.body.devVerificationToken });
+
+    const agent = request.agent(app);
+    const login = await agent
+      .post('/api/v1/auth/login')
+      .send({ email: baseUser.email, password: baseUser.password });
+
+    expect(login.status).toBe(200);
+
+    const logout = await agent.post('/api/v1/auth/logout');
+    const setCookie = logout.headers['set-cookie'];
+    const cookieHeader = Array.isArray(setCookie) ? setCookie.join(';') : String(setCookie ?? '');
+
+    expect(logout.status).toBe(200);
+    expect(cookieHeader).toContain('revia_at=;');
+
+    const me = await agent.get('/api/v1/auth/me');
+
+    expect(me.status).toBe(401);
+  });
+
   it('rechaza login con contraseña incorrecta', async () => {
     await registerUser();
 

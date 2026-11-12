@@ -105,8 +105,12 @@ export const ORDER_EVENT_LABELS: Record<string, string> = {
   handover_pending: 'Entrega coordinada',
   order_completed: 'Orden completada',
   order_cancelled: 'Orden cancelada',
+  dispute_opened: 'Disputa abierta',
+  dispute_rejected: 'Disputa rechazada',
+  order_refunded: 'Orden reembolsada',
   listing_unavailable: 'Publicación no disponible',
   seller_verified: 'Perfil verificado',
+  review_received: 'Reseña recibida',
 };
 
 export const PAYMENT_STATUSES = ['PENDING', 'SUCCESS', 'OVERPAID', 'UNDERPAID', 'EXPIRED'] as const;
@@ -125,6 +129,32 @@ export const DISPUTE_STATUSES = [
 ] as const;
 export type DisputeStatus = (typeof DISPUTE_STATUSES)[number];
 
+export const DISPUTE_REASONS = ['not_received', 'not_as_described'] as const;
+export type DisputeReason = (typeof DISPUTE_REASONS)[number];
+
+export const DISPUTE_REASON_LABELS: Record<DisputeReason, string> = {
+  not_received: 'No recibí el artículo',
+  not_as_described: 'El artículo no coincide con la descripción',
+};
+
+export const DISPUTE_STATUS_LABELS: Record<DisputeStatus, string> = {
+  open: 'Abierta',
+  under_review: 'En revisión',
+  resolved_refund: 'Resuelta con reembolso',
+  resolved_coupon: 'Resuelta con cupón',
+  resolved_rejected: 'Rechazada',
+  cancelled: 'Cancelada',
+};
+
+export const DISPUTE_RESOLUTIONS = ['refund_money', 'refund_coupon', 'reject'] as const;
+export type DisputeResolution = (typeof DISPUTE_RESOLUTIONS)[number];
+
+export const DISPUTE_RESOLUTION_LABELS: Record<DisputeResolution, string> = {
+  refund_money: 'Reembolsar dinero',
+  refund_coupon: 'Emitir cupón',
+  reject: 'Rechazar disputa',
+};
+
 export const PAYOUT_STATUSES = ['pending', 'processing', 'paid', 'failed'] as const;
 export type PayoutStatus = (typeof PAYOUT_STATUSES)[number];
 
@@ -141,6 +171,8 @@ export const PAYOUT_BLOCK_REASONS = [
   'kyc_not_approved',
   'dispute_open',
   'refund_pending',
+  'order_refunded',
+  'order_cancelled',
   'payout_account_missing',
   'payout_account_pending_review',
   'holder_mismatch',
@@ -153,6 +185,8 @@ export const PAYOUT_BLOCK_REASON_LABELS: Record<PayoutBlockReason, string> = {
   kyc_not_approved: 'La verificación de identidad del vendedor no está aprobada.',
   dispute_open: 'Hay una disputa abierta.',
   refund_pending: 'Hay un reembolso pendiente.',
+  order_refunded: 'La orden ya fue reembolsada.',
+  order_cancelled: 'La orden fue cancelada.',
   payout_account_missing: 'El vendedor no configuró su cuenta de cobro.',
   payout_account_pending_review: 'La cuenta de cobro está en revisión.',
   holder_mismatch: 'El titular de la cuenta no coincide con la identidad verificada.',
@@ -164,6 +198,16 @@ export const PAYOUT_EVENT_LABELS: Record<string, string> = {
   payout_processing: 'Payout en proceso',
   payout_paid: 'Payout pagado',
   payout_failed: 'Payout fallido',
+};
+
+export const COUPON_STATUSES = ['active', 'used', 'expired', 'cancelled'] as const;
+export type CouponStatus = (typeof COUPON_STATUSES)[number];
+
+export const COUPON_STATUS_LABELS: Record<CouponStatus, string> = {
+  active: 'Disponible',
+  used: 'Usado',
+  expired: 'Vencido',
+  cancelled: 'Cancelado',
 };
 
 export const KYC_STATUSES = [

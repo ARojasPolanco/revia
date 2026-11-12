@@ -8,7 +8,7 @@ import { ApiError, apiFetch } from '@/lib/api';
 type Status = 'loading' | 'success' | 'error' | 'idle';
 
 export default function VerifyEmailPage() {
-  const { user } = useAuth();
+  const { user, refresh } = useAuth();
   const requested = useRef(false);
   const [status, setStatus] = useState<Status>('loading');
   const [message, setMessage] = useState('Verificando tu email…');
@@ -32,15 +32,16 @@ export default function VerifyEmailPage() {
       method: 'POST',
       body: JSON.stringify({ token }),
     })
-      .then(() => {
+      .then(async () => {
+        await refresh();
         setStatus('success');
-        setMessage('Email verificado. Ya podés iniciar sesión.');
+        setMessage('Email verificado. Ya podés usar tu cuenta.');
       })
       .catch((caught) => {
         setStatus('error');
         setMessage(caught instanceof ApiError ? caught.message : 'No se pudo verificar el email');
       });
-  }, []);
+  }, [refresh]);
 
   async function resend() {
     setResending(true);
@@ -70,8 +71,11 @@ export default function VerifyEmailPage() {
         <p className="mt-3 text-sm leading-relaxed text-neutral-600">{message}</p>
 
         {status === 'success' ? (
-          <Link className="mt-5 block text-sm font-semibold text-teal-700" href="/ingresar">
-            Iniciar sesión
+          <Link
+            className="mt-5 block text-sm font-semibold text-teal-700"
+            href={user ? '/configuracion' : '/ingresar'}
+          >
+            {user ? 'Ir a mi cuenta' : 'Iniciar sesión'}
           </Link>
         ) : null}
 

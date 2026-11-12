@@ -5,6 +5,8 @@ import type { FormEvent } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/components/AuthProvider';
+import { useDialog } from '@/components/DialogProvider';
+import { ActionLink } from '@/components/PageHeader';
 import { VerifiedBadge } from '@/components/VerifiedBadge';
 import { ZoomableImage } from '@/components/ZoomableImage';
 import { ApiError, apiFetch } from '@/lib/api';
@@ -16,11 +18,13 @@ import {
   type Listing,
 } from '@/lib/listings';
 import type { Order, OrderQuote } from '@/lib/orders';
+import type { Coupon } from '@/lib/coupons';
 
 export default function ListingDetailPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
   const { user } = useAuth();
+  const { prompt, confirm } = useDialog();
   const [listing, setListing] = useState<Listing | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
   const [activePhoto, setActivePhoto] = useState(0);
@@ -43,6 +47,8 @@ export default function ListingDetailPage() {
   const [quoteLoading, setQuoteLoading] = useState(false);
   const [orderCreating, setOrderCreating] = useState(false);
   const [orderError, setOrderError] = useState<string | null>(null);
+  const [coupons, setCoupons] = useState<Coupon[]>([]);
+  const [couponId, setCouponId] = useState('');
 
   useEffect(() => {
     const id = typeof params.id === 'string' ? params.id : '';
@@ -89,6 +95,16 @@ export default function ListingDetailPage() {
   }, [listing, deliveryMode]);
 
   useEffect(() => {
+    if (!checkoutOpen || !user) {
+      return;
+    }
+
+    apiFetch<{ coupons: Coupon[] }>('/me/coupons/active')
+      .then((data) => setCoupons(data.coupons))
+      .catch(() => setCoupons([]));
+  }, [checkoutOpen, user]);
+
+  useEffect(() => {
     if (!checkoutOpen || !listing || !deliveryMode) {
       return;
     }
@@ -102,6 +118,7 @@ export default function ListingDetailPage() {
       body: JSON.stringify({
         listingId: listing.id,
         offerId: offerId ?? undefined,
+        couponId: offerId || !couponId ? undefined : couponId,
         deliveryMode,
       }),
     })
@@ -110,7 +127,7 @@ export default function ListingDetailPage() {
         setQuoteError(caught instanceof ApiError ? caught.message : 'No pudimos calcular el total.')
       )
       .finally(() => setQuoteLoading(false));
-  }, [checkoutOpen, listing, deliveryMode, offerId]);
+  }, [checkoutOpen, listing, deliveryMode, offerId, couponId]);
 
   async function toggleFavorite() {
     if (!listing) {
@@ -210,16 +227,24 @@ export default function ListingDetailPage() {
       return;
     }
 
-    const reason = window.prompt('Contanos brevemente por qué querés denunciar esta publicación.');
+    const reason = await prompt({
+      title: 'Denunciar publicación',
+      message:
+        'Contanos qué problema encontraste. La denuncia se revisa por separado y no modifica la publicación automáticamente.',
+      label: 'Motivo de la denuncia',
+      multiline: true,
+      placeholder: 'Ejemplo: el artículo parece una réplica.',
+      confirmLabel: 'Enviar denuncia',
+    });
 
-    if (!reason) {
+    if (!reason?.trim()) {
       return;
     }
 
     try {
       const data = await apiFetch<{ message?: string }>(`/listings/${listing.id}/report`, {
         method: 'POST',
-        body: JSON.stringify({ reason }),
+        body: JSON.stringify({ reason: reason.trim() }),
       });
       setReportMessage(data.message ?? 'Recibimos tu denuncia.');
     } catch (caught) {
@@ -230,7 +255,19 @@ export default function ListingDetailPage() {
   }
 
   async function confirmPurchase() {
-    if (!listing || !deliveryMode) {
+    if (!listing || !deliveryMode || !quote) {
+      return;
+    }
+
+    const confirmed = await confirm({
+      title: 'Confirmar compra',
+      message: `Vas a comprar "${listing.title}" por ${formatArs(
+        quote.totalAmountArs
+      )} con ${DELIVERY_LABELS[deliveryMode] ?? deliveryMode}. El dinero queda en custodia de REVIA hasta que confirmes la recepción.`,
+      confirmLabel: 'Confirmar compra',
+    });
+
+    if (!confirmed) {
       return;
     }
 
@@ -243,6 +280,7 @@ export default function ListingDetailPage() {
         body: JSON.stringify({
           listingId: listing.id,
           offerId: offerId ?? undefined,
+          couponId: offerId || !couponId ? undefined : couponId,
           deliveryMode,
         }),
       });
@@ -291,17 +329,21 @@ export default function ListingDetailPage() {
       (attribute) =>
         attribute.value !== undefined && attribute.value !== null && attribute.value !== ''
     );
+  const isOwner = Boolean(user && listing.seller && user.id === listing.seller.id);
+  const canInteract = Boolean(user && !isOwner && user.emailVerified && user.onboardingCompleted);
+  const canBuy = Boolean(canInteract && listing.status === 'active');
+  const needsAccountSetup = Boolean(
+    user && !isOwner && (!user.emailVerified || !user.onboardingCompleted)
+  );
+  const listingPath = `/publicaciones/${listing.id}`;
+  const loginHref = `/ingresar?next=${encodeURIComponent(listingPath)}`;
+  const onboardingHref = `/completar-perfil?next=${encodeURIComponent(listingPath)}`;
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-5xl flex-col gap-6 px-5 py-12">
-      <header className="flex items-center justify-between">
-        <Link className="text-sm font-semibold text-teal-700" href="/publicaciones">
-          Volver a publicaciones
-        </Link>
-        <Link className="text-sm font-semibold text-teal-700" href="/">
-          Inicio
-        </Link>
-      </header>
+      <Link className="text-sm font-semibold text-teal-700" href="/publicaciones">
+        ← Volver a publicaciones
+      </Link>
 
       <div className="grid gap-6 lg:grid-cols-[1.2fr_1fr]">
         <section className="flex flex-col gap-3">
@@ -358,7 +400,27 @@ export default function ListingDetailPage() {
             </p>
 
             <div className="mt-4 flex flex-col gap-2">
-              {user && listing.seller?.id !== user.id && listing.status === 'active' ? (
+              {needsAccountSetup ? (
+                <div className="rounded-xl border border-amber-200 bg-amber-50 p-3">
+                  <p className="text-xs font-semibold text-amber-950">
+                    Completá tu cuenta para comprar, ofertar o contactar.
+                  </p>
+                  <div className="mt-2 flex flex-col gap-2 sm:flex-row">
+                    {!user?.onboardingCompleted ? (
+                      <ActionLink href={onboardingHref} size="sm" variant="primary">
+                        Completar perfil
+                      </ActionLink>
+                    ) : null}
+                    {!user?.emailVerified ? (
+                      <ActionLink href="/configuracion" size="sm">
+                        Verificar email
+                      </ActionLink>
+                    ) : null}
+                  </div>
+                </div>
+              ) : null}
+
+              {canBuy ? (
                 <button
                   className="w-full rounded-xl bg-teal-700 px-4 py-3 text-sm font-semibold text-white disabled:opacity-60"
                   type="button"
@@ -368,7 +430,7 @@ export default function ListingDetailPage() {
                 </button>
               ) : null}
 
-              {checkoutOpen && user && listing.seller?.id !== user.id ? (
+              {checkoutOpen && canBuy ? (
                 <section className="flex flex-col gap-3 rounded-xl border border-teal-200 bg-teal-50 p-3">
                   <div>
                     <p className="text-xs font-bold uppercase tracking-wide text-teal-900">
@@ -396,6 +458,27 @@ export default function ListingDetailPage() {
                       </option>
                     ))}
                   </select>
+
+                  {!offerId && coupons.length > 0 ? (
+                    <div className="flex flex-col gap-1">
+                      <label className="text-xs font-semibold text-neutral-700" htmlFor="coupon">
+                        Cupón (opcional)
+                      </label>
+                      <select
+                        id="coupon"
+                        className="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm outline-none focus:border-teal-600"
+                        value={couponId}
+                        onChange={(event) => setCouponId(event.target.value)}
+                      >
+                        <option value="">Sin cupón</option>
+                        {coupons.map((coupon) => (
+                          <option key={coupon.id} value={coupon.id}>
+                            {coupon.code} · {formatArs(coupon.amountArs)}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  ) : null}
 
                   {quoteLoading ? (
                     <p className="text-xs text-neutral-500">Calculando total.</p>
@@ -433,6 +516,12 @@ export default function ListingDetailPage() {
                           <dt>Tasa de REVIA</dt>
                           <dd>{formatArs(quote.tasaAmountArs)}</dd>
                         </div>
+                        {quote.couponAmountArs > 0 ? (
+                          <div className="flex justify-between gap-3 text-teal-800">
+                            <dt>Cupón</dt>
+                            <dd>-{formatArs(quote.couponAmountArs)}</dd>
+                          </div>
+                        ) : null}
                         <div className="flex justify-between gap-3 border-t border-teal-200 pt-1 text-sm font-black text-teal-950">
                           <dt>Total</dt>
                           <dd>{formatArs(quote.totalAmountArs)}</dd>
@@ -447,6 +536,10 @@ export default function ListingDetailPage() {
                       >
                         {orderCreating ? 'Iniciando compra.' : 'Confirmar compra'}
                       </button>
+                      <p className="text-[11px] leading-relaxed text-neutral-500">
+                        El dinero queda en custodia de REVIA hasta que confirmes la recepción. La
+                        Tasa de REVIA se calcula sobre el precio del artículo.
+                      </p>
                     </>
                   ) : null}
 
@@ -467,7 +560,7 @@ export default function ListingDetailPage() {
                 {isFavorite ? 'Quitar de favoritos' : 'Guardar en favoritos'}
               </button>
 
-              {user && listing.seller?.id !== user.id ? (
+              {canInteract ? (
                 <>
                   <button
                     className="w-full rounded-xl border border-neutral-300 px-4 py-3 text-sm font-semibold text-neutral-800 disabled:opacity-60"
@@ -526,7 +619,7 @@ export default function ListingDetailPage() {
                 </>
               ) : null}
 
-              {user && listing.seller?.id === user.id ? (
+              {isOwner ? (
                 <Link
                   className="w-full rounded-xl border border-neutral-300 px-4 py-3 text-center text-sm font-semibold text-neutral-800"
                   href="/ofertas"
@@ -538,7 +631,7 @@ export default function ListingDetailPage() {
               {!user ? (
                 <Link
                   className="w-full rounded-xl border border-neutral-300 px-4 py-3 text-center text-sm font-semibold text-neutral-800"
-                  href="/ingresar"
+                  href={loginHref}
                 >
                   Ingresá para comprar, ofertar o contactar
                 </Link>

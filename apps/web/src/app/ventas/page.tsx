@@ -1,8 +1,8 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import Link from 'next/link';
 import { OrderCard } from '@/components/OrderCard';
+import { PageHeader } from '@/components/PageHeader';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { ApiError, apiFetch } from '@/lib/api';
 import type { Order } from '@/lib/orders';
@@ -29,32 +29,7 @@ function SalesContent() {
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-4xl flex-col gap-6 px-5 py-12">
-      <header className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-black tracking-tight text-neutral-900">Mis ventas</h1>
-          <p className="text-sm text-neutral-600">Gestioná entregas, códigos y payouts.</p>
-        </div>
-        <div className="flex gap-2">
-          <Link
-            className="rounded-xl border border-neutral-300 px-4 py-2 text-sm font-semibold text-neutral-800"
-            href="/cobros"
-          >
-            Cobros
-          </Link>
-          <Link
-            className="rounded-xl border border-neutral-300 px-4 py-2 text-sm font-semibold text-neutral-800"
-            href="/compras"
-          >
-            Compras
-          </Link>
-          <Link
-            className="rounded-xl border border-neutral-300 px-4 py-2 text-sm font-semibold text-neutral-800"
-            href="/"
-          >
-            Inicio
-          </Link>
-        </div>
-      </header>
+      <PageHeader description="Gestioná entregas, códigos y payouts." title="Mis ventas" />
 
       {loading ? <p className="text-sm text-neutral-500">Cargando ventas.</p> : null}
 

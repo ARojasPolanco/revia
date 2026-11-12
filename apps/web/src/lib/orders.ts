@@ -26,6 +26,8 @@ export interface OrderEvent {
 export interface Order {
   id: string;
   role: 'buyer' | 'seller';
+  couponId: string | null;
+  couponAmountArs: number;
   status: OrderStatus | string;
   deliveryMode: string;
   itemPriceArs: number;
@@ -66,6 +68,8 @@ export interface OrderQuote {
   listingTitle: string;
   listingPhotoUrl: string | null;
   offerId: string | null;
+  couponId: string | null;
+  couponAmountArs: number;
   deliveryMode: string;
   itemPriceArs: number;
   midpointFeeArs: number;

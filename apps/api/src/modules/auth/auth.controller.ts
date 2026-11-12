@@ -4,6 +4,7 @@ import { envs } from '../../config/envs.js';
 import { logger } from '../../config/logger.js';
 import { catchAsync } from '../../errors/catchAsync.js';
 import { clearAuthCookies, oauthStateCookieOptions, setAuthCookies } from '../../utils/cookies.js';
+import { safeRedirectPath } from '../../utils/safeRedirect.js';
 import * as authService from './auth.service.js';
 
 interface GoogleTokenResponse {
@@ -16,6 +17,10 @@ interface GoogleProfileResponse {
   email_verified?: boolean;
   name?: string;
   picture?: string;
+}
+
+function nextQuery(path: string): string {
+  return path === '/' ? '' : `&next=${encodeURIComponent(path)}`;
 }
 
 export const register = catchAsync(async (req: Request, res: Response) => {
@@ -120,14 +125,22 @@ export const completeOnboarding = catchAsync(async (req: Request, res: Response)
   });
 });
 
-export const google = catchAsync(async (_req: Request, res: Response) => {
+export const google = catchAsync(async (req: Request, res: Response) => {
+  const next = safeRedirectPath(req.query.next, envs.APP_URL);
+
   if (!envs.GOOGLE_CLIENT_ID || !envs.GOOGLE_CLIENT_SECRET) {
-    res.redirect(`${envs.APP_URL}/ingresar?error=google_no_config`);
+    res.redirect(`${envs.APP_URL}/ingresar?error=google_no_config${nextQuery(next)}`);
     return;
   }
 
   const state = randomBytes(16).toString('hex');
   res.cookie('revia_oauth_state', state, oauthStateCookieOptions());
+
+  if (next === '/') {
+    res.clearCookie('revia_oauth_next', oauthStateCookieOptions());
+  } else {
+    res.cookie('revia_oauth_next', next, oauthStateCookieOptions());
+  }
 
   const params = new URLSearchParams({
     client_id: envs.GOOGLE_CLIENT_ID,
@@ -142,11 +155,16 @@ export const google = catchAsync(async (_req: Request, res: Response) => {
 });
 
 export const googleCallback = catchAsync(async (req: Request, res: Response) => {
+  const next = safeRedirectPath(req.cookies?.revia_oauth_next, envs.APP_URL);
+  const suffix = nextQuery(next);
+
+  res.clearCookie('revia_oauth_next', oauthStateCookieOptions());
+
   try {
     const queryError = typeof req.query.error === 'string' ? req.query.error : null;
 
     if (queryError) {
-      res.redirect(`${envs.APP_URL}/ingresar?error=google_denied`);
+      res.redirect(`${envs.APP_URL}/ingresar?error=google_denied${suffix}`);
       return;
     }
 
@@ -155,14 +173,14 @@ export const googleCallback = catchAsync(async (req: Request, res: Response) => 
     const savedState = req.cookies?.revia_oauth_state;
 
     if (!code || !state || !savedState || state !== savedState) {
-      res.redirect(`${envs.APP_URL}/ingresar?error=google_state`);
+      res.redirect(`${envs.APP_URL}/ingresar?error=google_state${suffix}`);
       return;
     }
 
     res.clearCookie('revia_oauth_state', oauthStateCookieOptions());
 
     if (!envs.GOOGLE_CLIENT_ID || !envs.GOOGLE_CLIENT_SECRET) {
-      res.redirect(`${envs.APP_URL}/ingresar?error=google_no_config`);
+      res.redirect(`${envs.APP_URL}/ingresar?error=google_no_config${suffix}`);
       return;
     }
 
@@ -216,12 +234,14 @@ export const googleCallback = catchAsync(async (req: Request, res: Response) => 
 
     setAuthCookies(res, result.token);
     res.redirect(
-      result.user.onboardingCompleted ? `${envs.APP_URL}/` : `${envs.APP_URL}/completar-perfil`
+      result.user.onboardingCompleted
+        ? `${envs.APP_URL}${next}`
+        : `${envs.APP_URL}/completar-perfil?next=${encodeURIComponent(next)}`
     );
   } catch (error) {
     logger.error('Falló el login con Google', {
       error: error instanceof Error ? error.message : String(error),
     });
-    res.redirect(`${envs.APP_URL}/ingresar?error=google_failed`);
+    res.redirect(`${envs.APP_URL}/ingresar?error=google_failed${suffix}`);
   }
 });

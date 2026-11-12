@@ -1,4 +1,5 @@
 export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api/v1';
+export const REVIA_UNAUTHORIZED_EVENT = 'revia:unauthorized';
 
 export class ApiError extends Error {
   readonly status: number;
@@ -34,6 +35,10 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise
   const payload = (await response.json().catch(() => ({}))) as { message?: string } & T;
 
   if (!response.ok) {
+    if (response.status === 401 && !path.startsWith('/auth/') && typeof window !== 'undefined') {
+      window.dispatchEvent(new Event(REVIA_UNAUTHORIZED_EVENT));
+    }
+
     throw new ApiError(payload.message ?? 'Error de red', response.status);
   }
 

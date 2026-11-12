@@ -14,8 +14,8 @@ La especificación completa está en `docs/SPEC.md`.
 
 ## 2. Estado del repositorio
 
-- Fase actual: **Fases 1-7 completadas en local**. La siguiente es la Fase 8 (disputas, reembolsos, cupones y reseñas).
-- El repositorio tiene Fase 0 en `main` y Fases 1-7 en `dev`.
+- Fase actual: **Fases 1-8 completadas en local**. La siguiente es la Fase 9 (PWA, Web Push y emails transaccionales).
+- El repositorio tiene Fase 0 en `main` y Fases 1-8 en `dev`.
 - No hay credenciales, claves ni secretos versionados.
 - Toda decisión de producto y técnica se registra en `docs/DECISIONS.md`.
 - El código se construye por fases según `TASK.md`.

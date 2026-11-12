@@ -366,3 +366,14 @@ Se reutilizan patrones y módulos, adaptados a TypeScript:
 - Conciliación Talo: job diario + ejecución manual desde finanzas; compara pagos locales vs Talo y reprocesa diferencias de forma idempotente.
 - SLA: tres días hábiles desde `completed` (48-72 h hábiles), calculado en zona ART.
 - Smoke: `npm run smoke:fase7` procesa y paga el payout pendiente, y descarga el comprobante.
+
+## 18. Fase 8 implementada (2026-11-10)
+
+- Migración `010_disputes_coupons_reviews`: `disputes`, `dispute_events`, `dispute_evidence`, `coupons`, `coupon_redemptions`, `reviews` y `review_reports`; agrega cupón a órdenes.
+- Disputa desde `delivered` dentro de 48 h; orden `disputed`, payout bloqueado y SLA de 72 h.
+- Mensajes, evidencia por enlace/texto, oferta del vendedor y resolución desde soporte/admin.
+- Reembolso Talo `FULL`/`PARTIAL` idempotente; orden `refunded`, payout anulado y seguimiento de estado de reembolso en conciliación.
+- Cupones por valor del artículo, 90 días, un uso y sin combinar con ofertas; reserva al crear la orden y liberación al cancelar/vencer.
+- Reseñas bidireccionales 1-5, ventana de 30 días, promedio público, denuncia y ocultamiento por moderación.
+- UI: `/disputas`, `/disputas/[id]`, `/admin/disputas`, `/cupones`, `/admin/resenas` y reseñas en compras/ventas/perfil.
+- Tests: **78 API + 14 web**; build/lint verdes; migración `010` down/up verificada.

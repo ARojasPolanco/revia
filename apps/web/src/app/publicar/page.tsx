@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/AuthProvider';
 import { ListingFields } from '@/components/ListingFields';
+import { ActionLink, PageHeader } from '@/components/PageHeader';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { ApiError, apiFetch } from '@/lib/api';
 import {
@@ -127,15 +128,15 @@ function PublishContent() {
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-2xl flex-col gap-6 px-5 py-12">
-      <header className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-black tracking-tight text-neutral-900">Publicar artículo</h1>
-          <p className="text-sm text-neutral-600">Solo para vendedores con identidad verificada.</p>
-        </div>
-        <Link className="text-sm font-semibold text-teal-700" href="/mis-publicaciones">
-          Mis publicaciones
-        </Link>
-      </header>
+      <PageHeader
+        actions={
+          <ActionLink href="/mis-publicaciones" variant="secondary">
+            Mis publicaciones
+          </ActionLink>
+        }
+        description="Solo para vendedores con identidad verificada."
+        title="Publicar artículo"
+      />
 
       {!kycApproved ? (
         <p className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">

@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { protect, requireVerifiedEmail } from '../../middlewares/auth.js';
 import { validateBody } from '../../middlewares/validate.js';
 import * as controller from './users.controller.js';
+import { listUserReviews } from '../reviews/reviews.controller.js';
 
 const reportUserSchema = z
   .object({
@@ -13,6 +14,7 @@ const reportUserSchema = z
 export const usersRouter = Router();
 
 usersRouter.get('/:id', controller.getPublicProfile);
+usersRouter.get('/:id/reviews', listUserReviews);
 usersRouter.get('/:id/listings', controller.getUserListings);
 usersRouter.get('/:id/relationship', protect, controller.getRelationship);
 usersRouter.post('/:id/follow', protect, requireVerifiedEmail, controller.follow);

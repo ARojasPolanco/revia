@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth, type SessionUser } from '@/components/AuthProvider';
 import { ApiError, apiFetch } from '@/lib/api';
+import { safeNextPath } from '@/lib/navigation';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api/v1';
 
@@ -27,13 +28,22 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [googleHref, setGoogleHref] = useState(`${API_URL}/auth/google`);
 
   useEffect(() => {
-    const code = new URLSearchParams(window.location.search).get('error');
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('error');
+    const next = safeNextPath(params.get('next'));
 
     if (code) {
       setError(GOOGLE_ERRORS[code] ?? 'No se pudo iniciar sesión.');
+    } else if (params.get('expired') === '1') {
+      setError('Tu sesión venció. Ingresá de nuevo para continuar.');
     }
+
+    setGoogleHref(
+      `${API_URL}/auth/google${next === '/' ? '' : `?next=${encodeURIComponent(next)}`}`
+    );
   }, []);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -48,7 +58,13 @@ export default function LoginPage() {
       });
 
       await refresh();
-      router.replace(data.user.onboardingCompleted ? '/' : '/completar-perfil');
+      const next = safeNextPath(new URLSearchParams(window.location.search).get('next'));
+
+      if (data.user.onboardingCompleted) {
+        router.replace(next);
+      } else {
+        router.replace(`/completar-perfil?next=${encodeURIComponent(next)}`);
+      }
     } catch (caught) {
       setError(caught instanceof ApiError ? caught.message : 'No se pudo iniciar sesión');
     } finally {
@@ -109,7 +125,7 @@ export default function LoginPage() {
 
         <a
           className="block w-full rounded-xl border border-neutral-300 px-4 py-2.5 text-center text-sm font-semibold text-neutral-800"
-          href={`${API_URL}/auth/google`}
+          href={googleHref}
         >
           Continuar con Google
         </a>

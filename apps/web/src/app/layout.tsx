@@ -1,7 +1,10 @@
 import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
 import { AuthProvider } from '@/components/AuthProvider';
+import { DialogProvider } from '@/components/DialogProvider';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { SiteFooter } from '@/components/SiteFooter';
+import { SiteHeader } from '@/components/SiteHeader';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -32,7 +35,13 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
     <html lang="es-AR">
       <body>
         <ErrorBoundary>
-          <AuthProvider>{children}</AuthProvider>
+          <AuthProvider>
+            <DialogProvider>
+              <SiteHeader />
+              {children}
+              <SiteFooter />
+            </DialogProvider>
+          </AuthProvider>
         </ErrorBoundary>
       </body>
     </html>

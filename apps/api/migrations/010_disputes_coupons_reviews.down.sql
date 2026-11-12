@@ -1,0 +1,10 @@
+ALTER TABLE coupons DROP COLUMN IF EXISTS source_dispute_id;
+DROP TABLE IF EXISTS review_reports;
+DROP TABLE IF EXISTS reviews;
+DROP TABLE IF EXISTS dispute_evidence;
+DROP TABLE IF EXISTS dispute_events;
+DROP TABLE IF EXISTS disputes;
+DROP TABLE IF EXISTS coupon_redemptions;
+ALTER TABLE orders DROP COLUMN IF EXISTS coupon_amount_ars;
+ALTER TABLE orders DROP COLUMN IF EXISTS coupon_id;
+DROP TABLE IF EXISTS coupons;

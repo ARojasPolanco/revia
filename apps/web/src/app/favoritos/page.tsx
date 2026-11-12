@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Link from 'next/link';
 import { ListingCard } from '@/components/ListingCard';
+import { ActionLink, PageHeader } from '@/components/PageHeader';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { ApiError, apiFetch } from '@/lib/api';
 import type { Listing } from '@/lib/listings';
@@ -25,26 +25,15 @@ function FavoritesContent() {
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-5xl flex-col gap-6 px-5 py-12">
-      <header className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-black tracking-tight text-neutral-900">Favoritos</h1>
-          <p className="text-sm text-neutral-600">Publicaciones que guardaste para después.</p>
-        </div>
-        <div className="flex gap-2">
-          <Link
-            className="rounded-xl border border-neutral-300 px-4 py-2 text-sm font-semibold text-neutral-800"
-            href="/publicaciones"
-          >
-            Explorar
-          </Link>
-          <Link
-            className="rounded-xl border border-neutral-300 px-4 py-2 text-sm font-semibold text-neutral-800"
-            href="/"
-          >
-            Inicio
-          </Link>
-        </div>
-      </header>
+      <PageHeader
+        actions={
+          <ActionLink href="/publicaciones" variant="secondary">
+            Explorar publicaciones
+          </ActionLink>
+        }
+        description="Publicaciones que guardaste para después."
+        title="Favoritos"
+      />
 
       {loading ? <p className="text-sm text-neutral-500">Cargando favoritos…</p> : null}
 

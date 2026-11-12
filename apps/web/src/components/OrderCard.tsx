@@ -7,6 +7,50 @@ interface Props {
   href: string;
 }
 
+function nextStepLabel(order: Order): string {
+  if (order.role === 'buyer') {
+    if (order.status === 'pending_payment') {
+      return 'Completar pago';
+    }
+    if (order.status === 'payment_review') {
+      return 'Ver estado del pago';
+    }
+    if (order.status === 'paid' || order.status === 'handover_pending') {
+      return 'Ver código de entrega';
+    }
+    if (order.status === 'delivered') {
+      return 'Confirmar recepción o reclamar';
+    }
+    if (order.status === 'disputed') {
+      return 'Ver disputa';
+    }
+    if (order.status === 'completed') {
+      return 'Dejar reseña';
+    }
+    return 'Ver detalle';
+  }
+
+  if (order.status === 'pending_payment') {
+    return 'Esperando el pago';
+  }
+  if (order.status === 'payment_review') {
+    return 'Pago en revisión';
+  }
+  if (order.status === 'paid' || order.status === 'handover_pending') {
+    return 'Validar código de entrega';
+  }
+  if (order.status === 'delivered') {
+    return 'Esperando fin del reclamo';
+  }
+  if (order.status === 'disputed') {
+    return 'Ver disputa';
+  }
+  if (order.status === 'completed') {
+    return 'Payout pendiente';
+  }
+  return 'Ver detalle';
+}
+
 export function OrderCard({ order, href }: Props) {
   const counterpart = order.role === 'buyer' ? order.seller : order.buyer;
 
@@ -49,6 +93,9 @@ export function OrderCard({ order, href }: Props) {
           <p className="text-lg font-black text-neutral-900">{formatArs(order.totalAmountArs)}</p>
           <p className="text-[11px] text-neutral-400">{formatDateTime(order.createdAt)}</p>
         </div>
+        <Link className="mt-1 w-fit text-xs font-semibold text-teal-700" href={href}>
+          {nextStepLabel(order)} →
+        </Link>
       </div>
     </article>
   );

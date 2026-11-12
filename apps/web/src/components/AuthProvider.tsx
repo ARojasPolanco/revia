@@ -1,8 +1,18 @@
 'use client';
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import type { ReactNode } from 'react';
-import { ApiError, apiFetch } from '@/lib/api';
+import { usePathname, useRouter } from 'next/navigation';
+import { ApiError, apiFetch, REVIA_UNAUTHORIZED_EVENT } from '@/lib/api';
+import { isAuthPath } from '@/lib/navigation';
 
 export interface SessionUser {
   id: string;
@@ -26,6 +36,9 @@ interface AuthContextValue {
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const redirectingRef = useRef(false);
   const [user, setUser] = useState<SessionUser | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -46,6 +59,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     void refresh();
   }, [refresh]);
+
+  useEffect(() => {
+    redirectingRef.current = false;
+  }, [pathname]);
+
+  useEffect(() => {
+    function handleUnauthorized() {
+      setUser(null);
+
+      if (redirectingRef.current || isAuthPath(window.location.pathname)) {
+        return;
+      }
+
+      redirectingRef.current = true;
+      const next = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+      router.replace(`/ingresar?next=${encodeURIComponent(next)}&expired=1`);
+    }
+
+    window.addEventListener(REVIA_UNAUTHORIZED_EVENT, handleUnauthorized);
+
+    return () => {
+      window.removeEventListener(REVIA_UNAUTHORIZED_EVENT, handleUnauthorized);
+    };
+  }, [router]);
 
   const logout = useCallback(async () => {
     try {

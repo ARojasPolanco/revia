@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { PageHeader } from '@/components/PageHeader';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { ApiError, apiFetch } from '@/lib/api';
 import type { Conversation } from '@/lib/chat';
@@ -22,15 +23,7 @@ function ChatListContent() {
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-2xl flex-col gap-6 px-5 py-12">
-      <header className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-black tracking-tight text-neutral-900">Chat</h1>
-          <p className="text-sm text-neutral-600">Coordiná la entrega dentro de REVIA.</p>
-        </div>
-        <Link className="text-sm font-semibold text-teal-700" href="/">
-          Inicio
-        </Link>
-      </header>
+      <PageHeader description="Coordiná la entrega dentro de REVIA." title="Chat" />
 
       {loading ? <p className="text-sm text-neutral-500">Cargando chats…</p> : null}
 

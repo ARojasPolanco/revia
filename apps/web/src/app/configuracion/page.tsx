@@ -4,8 +4,11 @@ import { useEffect, useState } from 'react';
 import type { ChangeEvent, FormEvent } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { LogOut } from 'lucide-react';
 import { useAuth, type SessionUser } from '@/components/AuthProvider';
+import { useDialog } from '@/components/DialogProvider';
 import { InfoTooltip } from '@/components/InfoTooltip';
+import { ActionButton, PageHeader } from '@/components/PageHeader';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { VerifiedBadge } from '@/components/VerifiedBadge';
 import { ApiError, apiFetch } from '@/lib/api';
@@ -37,6 +40,7 @@ const KYC_LABELS: Record<string, string> = {
 function SettingsContent() {
   const router = useRouter();
   const { user, refresh, logout } = useAuth();
+  const { confirm } = useDialog();
   const [fullName, setFullName] = useState('');
   const [bio, setBio] = useState('');
   const [location, setLocation] = useState('');
@@ -187,6 +191,18 @@ function SettingsContent() {
   }
 
   async function handleLogout() {
+    const confirmed = await confirm({
+      title: 'Cerrar sesión',
+      message: 'Vas a salir de tu cuenta en este dispositivo.',
+      icon: <LogOut className="h-5 w-5" strokeWidth={1.75} />,
+      confirmLabel: 'Cerrar sesión',
+      tone: 'danger',
+    });
+
+    if (!confirmed) {
+      return;
+    }
+
     await logout();
     router.replace('/');
   }
@@ -195,16 +211,15 @@ function SettingsContent() {
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-2xl flex-col gap-6 px-5 py-12">
-      <header className="flex items-center justify-between">
-        <h1 className="text-2xl font-black tracking-tight text-neutral-900">Mi cuenta</h1>
-        <button
-          className="rounded-xl border border-neutral-300 px-4 py-2 text-sm font-semibold text-neutral-800"
-          type="button"
-          onClick={handleLogout}
-        >
-          Cerrar sesión
-        </button>
-      </header>
+      <PageHeader
+        actions={
+          <ActionButton onClick={handleLogout} variant="danger">
+            Cerrar sesión
+          </ActionButton>
+        }
+        description="Perfil, verificación, cobros y preferencias de tu cuenta."
+        title="Mi cuenta"
+      />
 
       <section className="flex items-center gap-4 rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
         {user?.avatarUrl ? (

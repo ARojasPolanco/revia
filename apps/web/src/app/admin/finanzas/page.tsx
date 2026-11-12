@@ -3,7 +3,9 @@
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/components/AuthProvider';
+import { useDialog } from '@/components/DialogProvider';
 import { FinancePayoutCard } from '@/components/FinancePayoutCard';
+import { ActionButton, AdminTabs, PageHeader } from '@/components/PageHeader';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { ApiError, apiFetch } from '@/lib/api';
 import { formatArs } from '@/lib/listings';
@@ -35,6 +37,7 @@ const filters: { value: Filter; label: string }[] = [
 
 function FinanceContent() {
   const { user } = useAuth();
+  const { confirm, prompt } = useDialog();
   const [payouts, setPayouts] = useState<Payout[]>([]);
   const [summary, setSummary] = useState<PayoutSummary>(emptySummary);
   const [filter, setFilter] = useState<Filter>('pending');
@@ -93,13 +96,27 @@ function FinanceContent() {
     );
   }
 
-  function payPayout(payout: Payout) {
-    const operationId = window.prompt(
-      'ID de operación bancaria (comprobante):',
-      `REVIA-${payout.id.slice(0, 8)}`
-    );
+  async function payPayout(payout: Payout) {
+    const operationId = await prompt({
+      title: 'Marcar payout como pagado',
+      message: `Vas a cerrar el payout de ${formatArs(payout.amountArs)}. Esta acción habilita el comprobante para el vendedor.`,
+      label: 'ID de operación bancaria',
+      defaultValue: `REVIA-${payout.id.slice(0, 8)}`,
+      confirmLabel: 'Continuar',
+    });
 
-    if (!operationId) {
+    if (!operationId?.trim()) {
+      return;
+    }
+
+    const confirmed = await confirm({
+      title: 'Confirmar transferencia',
+      message:
+        'Confirmá solo si la transferencia ya fue realizada. El payout y la orden quedarán marcados como pagados.',
+      confirmLabel: 'Sí, ya transferí',
+    });
+
+    if (!confirmed) {
       return;
     }
 
@@ -108,16 +125,23 @@ function FinanceContent() {
       () =>
         apiFetch(`/admin/payouts/${payout.id}/mark-paid`, {
           method: 'POST',
-          body: JSON.stringify({ operationId }),
+          body: JSON.stringify({ operationId: operationId.trim() }),
         }),
       'Payout marcado como pagado.'
     );
   }
 
-  function failPayout(payout: Payout) {
-    const reason = window.prompt('Motivo del fallo (visible para finanzas):');
+  async function failPayout(payout: Payout) {
+    const reason = await prompt({
+      title: 'Marcar payout como fallido',
+      message: 'El motivo queda en la auditoría de finanzas y el vendedor verá que el pago falló.',
+      label: 'Motivo del fallo',
+      multiline: true,
+      placeholder: 'Ejemplo: CBU rechazado por el banco.',
+      confirmLabel: 'Marcar fallido',
+    });
 
-    if (!reason) {
+    if (!reason?.trim()) {
       return;
     }
 
@@ -126,7 +150,7 @@ function FinanceContent() {
       () =>
         apiFetch(`/admin/payouts/${payout.id}/mark-failed`, {
           method: 'POST',
-          body: JSON.stringify({ reason }),
+          body: JSON.stringify({ reason: reason.trim() }),
         }),
       'Payout marcado como fallido.'
     );
@@ -167,38 +191,20 @@ function FinanceContent() {
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-5xl flex-col gap-6 px-5 py-12">
-      <header className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-black tracking-tight text-neutral-900">Finanzas</h1>
-          <p className="text-sm text-neutral-600">
-            Cola de payouts, bloqueos, comprobantes y conciliación.
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <button
-            className="rounded-xl border border-teal-700 px-4 py-2 text-sm font-semibold text-teal-700 disabled:opacity-60"
-            type="button"
+      <PageHeader
+        actions={
+          <ActionButton
             onClick={() => void reconcile()}
             disabled={busyId !== null}
+            variant="secondary"
           >
             {busyId === 'reconcile' ? 'Conciliando.' : 'Conciliar Talo'}
-          </button>
-          {user?.role === 'admin' ? (
-            <Link
-              className="rounded-xl border border-neutral-300 px-4 py-2 text-sm font-semibold text-neutral-800"
-              href="/admin/publicaciones"
-            >
-              Moderación
-            </Link>
-          ) : null}
-          <Link
-            className="rounded-xl border border-neutral-300 px-4 py-2 text-sm font-semibold text-neutral-800"
-            href="/"
-          >
-            Inicio
-          </Link>
-        </div>
-      </header>
+          </ActionButton>
+        }
+        description="Cola de payouts, bloqueos, comprobantes y conciliación."
+        title="Finanzas"
+      />
+      <AdminTabs current="/admin/finanzas" role={user?.role} />
 
       <section className="grid gap-3 sm:grid-cols-4">
         <article className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm">
@@ -238,6 +244,11 @@ function FinanceContent() {
       {summary.nextDueAt ? (
         <p className="text-xs text-neutral-500">Próximo SLA: {formatDateTime(summary.nextDueAt)}</p>
       ) : null}
+
+      <p className="rounded-xl border border-neutral-200 bg-neutral-50 px-3 py-2 text-xs text-neutral-600">
+        El pago del payout es manual. Marcá pagado solo después de ejecutar la transferencia y
+        guardar el ID de operación para el comprobante del vendedor.
+      </p>
 
       <div className="flex flex-wrap gap-2">
         {filters.map((item) => (

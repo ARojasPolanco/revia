@@ -5,6 +5,7 @@ import type { FormEvent } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useAuth } from '@/components/AuthProvider';
+import { useDialog } from '@/components/DialogProvider';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { ApiError, apiFetch } from '@/lib/api';
 import type { ChatMessage, Conversation } from '@/lib/chat';
@@ -20,6 +21,7 @@ function ChatContent() {
   const params = useParams<{ id: string }>();
   const conversationId = typeof params.id === 'string' ? params.id : '';
   const { user } = useAuth();
+  const { confirm, prompt } = useDialog();
   const [conversation, setConversation] = useState<Conversation | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [body, setBody] = useState('');
@@ -102,7 +104,19 @@ function ChatContent() {
   }
 
   async function blockUser() {
-    if (!conversation?.otherUser || !window.confirm('¿Bloquear a este usuario?')) {
+    if (!conversation?.otherUser) {
+      return;
+    }
+
+    const confirmed = await confirm({
+      title: 'Bloquear usuario',
+      message:
+        'Vas a bloquear a este usuario. No podrán enviarse mensajes entre ustedes. Podés desbloquearlo desde tu perfil.',
+      confirmLabel: 'Bloquear',
+      tone: 'danger',
+    });
+
+    if (!confirmed) {
       return;
     }
 
@@ -119,9 +133,16 @@ function ChatContent() {
       return;
     }
 
-    const reason = window.prompt('Contanos brevemente por qué querés denunciar a este usuario.');
+    const reason = await prompt({
+      title: 'Denunciar usuario',
+      message:
+        'Contanos qué pasó. La denuncia se revisa por separado y no bloquea automáticamente al usuario.',
+      label: 'Motivo de la denuncia',
+      multiline: true,
+      confirmLabel: 'Enviar denuncia',
+    });
 
-    if (!reason) {
+    if (!reason?.trim()) {
       return;
     }
 
@@ -130,7 +151,7 @@ function ChatContent() {
         `/users/${conversation.otherUser.id}/report`,
         {
           method: 'POST',
-          body: JSON.stringify({ reason }),
+          body: JSON.stringify({ reason: reason.trim() }),
         }
       );
       setActionMessage(data.message ?? 'Recibimos tu denuncia.');

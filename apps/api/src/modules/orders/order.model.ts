@@ -13,6 +13,8 @@ export class Order extends Model<InferAttributes<Order>, InferCreationAttributes
   declare sellerId: string;
   declare listingId: string;
   declare offerId: CreationOptional<string | null>;
+  declare couponId: CreationOptional<string | null>;
+  declare couponAmountArs: CreationOptional<number>;
   declare deliveryMode: string;
   declare status: CreationOptional<string>;
   declare itemPriceArs: number;
@@ -56,6 +58,15 @@ Order.init(
     offerId: {
       type: DataTypes.UUID,
       allowNull: true,
+    },
+    couponId: {
+      type: DataTypes.UUID,
+      allowNull: true,
+    },
+    couponAmountArs: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0,
     },
     deliveryMode: {
       type: DataTypes.STRING(30),

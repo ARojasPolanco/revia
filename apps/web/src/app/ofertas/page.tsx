@@ -1,15 +1,18 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import Link from 'next/link';
+import { useDialog } from '@/components/DialogProvider';
 import { OfferCard } from '@/components/OfferCard';
+import { ActionLink, PageHeader } from '@/components/PageHeader';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { ApiError, apiFetch } from '@/lib/api';
+import { formatArs } from '@/lib/listings';
 import type { Offer, OffersResponse } from '@/lib/offers';
 
 type Tab = 'received' | 'sent';
 
 function OffersContent() {
+  const { confirm, prompt } = useDialog();
   const [offers, setOffers] = useState<OffersResponse>({ sent: [], received: [] });
   const [tab, setTab] = useState<Tab>('received');
   const [loading, setLoading] = useState(true);
@@ -48,12 +51,17 @@ function OffersContent() {
     }
   }
 
-  function counter(offer: Offer) {
-    const raw = window.prompt(
-      `Contraoferta para "${offer.listingTitle}" (precio publicado ${offer.listingPriceArs}).\nIngresá el monto en ARS:`
-    );
+  async function counter(offer: Offer) {
+    const raw = await prompt({
+      title: 'Enviar contraoferta',
+      message: `Precio publicado: ${formatArs(offer.listingPriceArs)}. La contraoferta no reserva el artículo.`,
+      label: 'Monto en ARS',
+      inputType: 'number',
+      placeholder: String(offer.amountArs),
+      confirmLabel: 'Enviar contraoferta',
+    });
 
-    if (!raw) {
+    if (!raw?.trim()) {
       return;
     }
 
@@ -75,30 +83,60 @@ function OffersContent() {
     );
   }
 
+  async function rejectOffer(offer: Offer) {
+    const confirmed = await confirm({
+      title: 'Rechazar oferta',
+      message: `Vas a rechazar la oferta de ${formatArs(
+        offer.amountArs
+      )}. La otra parte recibirá la notificación.`,
+      confirmLabel: 'Rechazar oferta',
+      tone: 'danger',
+    });
+
+    if (!confirmed) {
+      return;
+    }
+
+    await runAction(
+      offer.id,
+      () => apiFetch(`/offers/${offer.id}/reject`, { method: 'POST' }),
+      'Oferta rechazada.'
+    );
+  }
+
+  async function cancelOffer(offer: Offer) {
+    const confirmed = await confirm({
+      title: 'Cancelar oferta',
+      message:
+        'La oferta dejará de estar activa. Podés volver a ofertar mientras la publicación siga disponible.',
+      confirmLabel: 'Cancelar oferta',
+      tone: 'danger',
+    });
+
+    if (!confirmed) {
+      return;
+    }
+
+    await runAction(
+      offer.id,
+      () => apiFetch(`/offers/${offer.id}`, { method: 'DELETE' }),
+      'Oferta cancelada.'
+    );
+  }
+
   const list = tab === 'received' ? offers.received : offers.sent;
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-3xl flex-col gap-6 px-5 py-12">
-      <header className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-black tracking-tight text-neutral-900">Ofertas</h1>
-          <p className="text-sm text-neutral-600">Negociá el precio dentro de REVIA.</p>
-        </div>
-        <div className="flex gap-2">
-          <Link
-            className="rounded-xl border border-neutral-300 px-4 py-2 text-sm font-semibold text-neutral-800"
-            href="/publicaciones"
-          >
-            Catálogo
-          </Link>
-          <Link
-            className="rounded-xl border border-neutral-300 px-4 py-2 text-sm font-semibold text-neutral-800"
-            href="/"
-          >
-            Inicio
-          </Link>
-        </div>
-      </header>
+      <PageHeader
+        actions={
+          <ActionLink href="/publicaciones" variant="secondary">
+            Ir al catálogo
+          </ActionLink>
+        }
+        description="Negociá el precio dentro de REVIA."
+        title="Ofertas"
+      />
 
       <div className="flex gap-2">
         <button
@@ -157,21 +195,9 @@ function OffersContent() {
                 'Oferta aceptada.'
               )
             }
-            onReject={(item) =>
-              runAction(
-                item.id,
-                () => apiFetch(`/offers/${item.id}/reject`, { method: 'POST' }),
-                'Oferta rechazada.'
-              )
-            }
+            onReject={rejectOffer}
             onCounter={counter}
-            onCancel={(item) =>
-              runAction(
-                item.id,
-                () => apiFetch(`/offers/${item.id}`, { method: 'DELETE' }),
-                'Oferta cancelada.'
-              )
-            }
+            onCancel={cancelOffer}
           />
         ))}
       </div>

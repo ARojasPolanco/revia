@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/AuthProvider';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { ApiError, apiFetch } from '@/lib/api';
+import { safeNextPath } from '@/lib/navigation';
 
 const inputClass =
   'mt-1 w-full rounded-xl border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 outline-none focus:border-teal-600';
@@ -30,7 +31,7 @@ function OnboardingForm() {
         body: JSON.stringify({ birthDate, acceptTerms }),
       });
       await refresh();
-      router.replace('/');
+      router.replace(safeNextPath(new URLSearchParams(window.location.search).get('next')));
     } catch (caught) {
       setError(caught instanceof ApiError ? caught.message : 'No se pudo completar el perfil');
     } finally {

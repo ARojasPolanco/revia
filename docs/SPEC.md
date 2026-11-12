@@ -241,6 +241,8 @@ Reglas del cupón:
 - No incluye Tasa ni tarifa logística.
 - Vence a los **90 días** (configurable).
 - Es de un solo uso, no transferible y no canjeable por dinero.
+- Al usarlo, el cupón se aplica como crédito al `item_price`; el comprador paga Tasa y logística.
+- Se reserva al crear la orden y se libera si la orden se cancela o vence.
 - No se combina con ofertas aceptadas: el comprador elige oferta o cupón.
 
 ### 9.6 Reembolso técnico

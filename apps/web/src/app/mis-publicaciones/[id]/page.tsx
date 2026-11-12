@@ -5,6 +5,7 @@ import type { ChangeEvent, FormEvent } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { ListingFields } from '@/components/ListingFields';
+import { useDialog } from '@/components/DialogProvider';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { ApiError, apiFetch } from '@/lib/api';
 import {
@@ -15,6 +16,7 @@ import {
 } from '@/lib/listings';
 
 function EditListingContent() {
+  const { confirm } = useDialog();
   const params = useParams<{ id: string }>();
   const listingId = typeof params.id === 'string' ? params.id : '';
   const [listing, setListing] = useState<Listing | null>(null);
@@ -139,7 +141,14 @@ function EditListingContent() {
   }
 
   async function deletePhoto(photoId: string) {
-    if (!window.confirm('¿Eliminar esta foto?')) {
+    const confirmed = await confirm({
+      title: 'Quitar foto',
+      message: 'La foto se quitará de la publicación. Esta acción no se puede deshacer.',
+      confirmLabel: 'Quitar foto',
+      tone: 'danger',
+    });
+
+    if (!confirmed) {
       return;
     }
 

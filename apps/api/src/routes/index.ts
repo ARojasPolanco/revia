@@ -3,6 +3,12 @@ import { protect } from '../middlewares/auth.js';
 import { avatarUpload } from '../middlewares/upload.js';
 import { authRouter } from '../modules/auth/auth.route.js';
 import { categoriesRouter } from '../modules/categories/categories.route.js';
+import { meCouponsRouter } from '../modules/coupons/coupons.route.js';
+import {
+  adminDisputesRouter,
+  disputesRouter,
+  orderDisputesRouter,
+} from '../modules/disputes/disputes.route.js';
 import { conversationsRouter } from '../modules/chat/chat.route.js';
 import { kycRouter } from '../modules/kyc/kyc.route.js';
 import {
@@ -16,6 +22,11 @@ import { notificationsRouter } from '../modules/notifications/notifications.rout
 import { meOffersRouter, offersRouter } from '../modules/offers/offers.route.js';
 import { meOrdersRouter, ordersRouter } from '../modules/orders/orders.route.js';
 import { adminPayoutsRouter, payoutsRouter } from '../modules/payouts/payouts.route.js';
+import {
+  adminReviewsRouter,
+  orderReviewsRouter,
+  reviewsRouter,
+} from '../modules/reviews/reviews.route.js';
 import { uploadAvatar } from '../modules/users/users.controller.js';
 import { meFollowsRouter, usersRouter } from '../modules/users/users.route.js';
 import { webhooksRouter } from '../modules/webhooks/webhooks.route.js';
@@ -36,6 +47,10 @@ apiRouter.use('/listings', listingsRouter);
 apiRouter.use('/feed', feedRouter);
 apiRouter.use('/offers', offersRouter);
 apiRouter.use('/orders', ordersRouter);
+apiRouter.use('/orders', orderDisputesRouter);
+apiRouter.use('/orders', orderReviewsRouter);
+apiRouter.use('/disputes', disputesRouter);
+apiRouter.use('/reviews', reviewsRouter);
 apiRouter.use('/conversations', conversationsRouter);
 apiRouter.use('/notifications', notificationsRouter);
 apiRouter.use('/kyc', kycRouter);
@@ -44,8 +59,11 @@ apiRouter.use('/me', meListingsRouter);
 apiRouter.use('/me', meFollowsRouter);
 apiRouter.use('/me', meOffersRouter);
 apiRouter.use('/me', meOrdersRouter);
+apiRouter.use('/me', meCouponsRouter);
 apiRouter.post('/me/avatar', protect, avatarUpload.single('avatar'), uploadAvatar);
 apiRouter.use('/admin/payouts', adminPayoutsRouter);
+apiRouter.use('/admin/disputes', adminDisputesRouter);
+apiRouter.use('/admin/reviews', adminReviewsRouter);
 apiRouter.use('/admin/listings', adminListingsRouter);
 apiRouter.use('/admin/reports', adminReportsRouter);
 apiRouter.use('/webhooks', webhooksRouter);

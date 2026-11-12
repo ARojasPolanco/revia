@@ -7,6 +7,12 @@ import { AppError } from '../../errors/appError.js';
 import { hashToken } from '../../utils/tokens.js';
 import { toPublicUser, type PublicUser } from '../auth/auth.service.js';
 import { createNotification } from '../notifications/notifications.service.js';
+import {
+  releaseCouponForOrder,
+  reserveCoupon,
+  validateCouponForOrder,
+} from '../coupons/coupons.service.js';
+import type { Coupon } from '../coupons/coupon.model.js';
 import { ensurePayoutForOrder } from '../payouts/payoutRecords.service.js';
 import { Listing } from '../listings/listing.model.js';
 import { ListingPhoto } from '../listings/listingPhoto.model.js';
@@ -31,6 +37,8 @@ export interface OrderQuoteView {
   listingTitle: string;
   listingPhotoUrl: string | null;
   offerId: string | null;
+  couponId: string | null;
+  couponAmountArs: number;
   deliveryMode: string;
   itemPriceArs: number;
   midpointFeeArs: number;
@@ -52,6 +60,8 @@ export interface OrderEventView {
 export interface OrderView {
   id: string;
   role: 'buyer' | 'seller';
+  couponId: string | null;
+  couponAmountArs: number;
   status: string;
   deliveryMode: string;
   itemPriceArs: number;
@@ -98,6 +108,8 @@ type OrderWithRelations = Order & {
 interface ResolvedOrderContext {
   listing: Listing;
   offer: Offer | null;
+  coupon: Coupon | null;
+  couponAmountArs: number;
   itemPriceArs: number;
   midpointFeeArs: number;
   listingPhotoUrl: string | null;
@@ -174,6 +186,8 @@ async function resolveOrderContext(
   assertDeliveryMode(listing, input.deliveryMode);
 
   let offer: Offer | null = null;
+  let coupon: Coupon | null = null;
+  let couponAmountArs = 0;
   let itemPriceArs = listing.priceArs;
 
   if (input.offerId) {
@@ -203,13 +217,26 @@ async function resolveOrderContext(
     itemPriceArs = offer.amountArs;
   }
 
+  if (input.couponId) {
+    if (offer) {
+      throw new AppError('No podés combinar un cupón con una oferta.', 422);
+    }
+
+    coupon = await validateCouponForOrder(buyerId, input.couponId);
+    couponAmountArs = Math.min(coupon.amountArs, itemPriceArs);
+  }
+
   const midpointFeeArs = calculateMidpointFee(listing, input.deliveryMode);
-  const totals = buildOrderTotals({
+  const baseTotals = buildOrderTotals({
     itemPriceArs,
     midpointFeeArs,
     tasaPercent: DEFAULTS.tasaPercent,
     tasaFixedArs: DEFAULTS.tasaFixedArs,
   });
+  const totals = {
+    ...baseTotals,
+    totalAmountArs: Math.max(1, baseTotals.totalAmountArs - couponAmountArs),
+  };
   const photo = await ListingPhoto.findOne({
     where: { listingId: listing.id, isDeleted: false },
     order: [['sortOrder', 'ASC']],
@@ -218,6 +245,8 @@ async function resolveOrderContext(
   return {
     listing,
     offer,
+    coupon,
+    couponAmountArs,
     itemPriceArs,
     midpointFeeArs,
     listingPhotoUrl: photo?.thumbnailUrl ?? photo?.url ?? null,
@@ -247,6 +276,8 @@ function toOrderView(order: Order, userId: string): OrderView {
   return {
     id: order.id,
     role: isBuyer ? 'buyer' : 'seller',
+    couponId: order.couponId,
+    couponAmountArs: order.couponAmountArs,
     status: order.status,
     deliveryMode: order.deliveryMode,
     itemPriceArs: order.itemPriceArs,
@@ -301,6 +332,8 @@ export async function quoteOrder(buyerId: string, input: OrderQuoteInput): Promi
     listingTitle: context.listing.title,
     listingPhotoUrl: context.listingPhotoUrl,
     offerId: context.offer?.id ?? null,
+    couponId: context.coupon?.id ?? null,
+    couponAmountArs: context.couponAmountArs,
     deliveryMode: input.deliveryMode,
     tasaPercent: DEFAULTS.tasaPercent,
     tasaFixedArs: DEFAULTS.tasaFixedArs,
@@ -312,31 +345,40 @@ export async function createOrder(
   buyerId: string,
   input: CreateOrderInput
 ): Promise<{ order: OrderView; paymentError: string | null }> {
-  if (input.couponId) {
-    throw new AppError('Los cupones todavía no están disponibles.', 422);
-  }
-
   const context = await resolveOrderContext(buyerId, input);
 
   let order: Order;
 
   try {
-    order = await Order.create({
-      buyerId,
-      sellerId: context.listing.sellerId,
-      listingId: context.listing.id,
-      offerId: context.offer?.id ?? null,
-      deliveryMode: input.deliveryMode,
-      status: 'pending_payment',
-      itemPriceArs: context.totals.itemPriceArs,
-      midpointFeeArs: context.totals.midpointFeeArs,
-      tasaPercent: DEFAULTS.tasaPercent,
-      tasaFixedArs: DEFAULTS.tasaFixedArs,
-      tasaAmountArs: context.totals.tasaAmountArs,
-      totalAmountArs: context.totals.totalAmountArs,
-      sellerPayoutArs: context.totals.sellerPayoutArs,
-      listingTitleSnapshot: context.listing.title,
-      listingPhotoUrlSnapshot: context.listingPhotoUrl,
+    order = await sequelize.transaction(async (transaction) => {
+      const created = await Order.create(
+        {
+          buyerId,
+          sellerId: context.listing.sellerId,
+          listingId: context.listing.id,
+          offerId: context.offer?.id ?? null,
+          couponId: context.coupon?.id ?? null,
+          couponAmountArs: context.couponAmountArs,
+          deliveryMode: input.deliveryMode,
+          status: 'pending_payment',
+          itemPriceArs: context.totals.itemPriceArs,
+          midpointFeeArs: context.totals.midpointFeeArs,
+          tasaPercent: DEFAULTS.tasaPercent,
+          tasaFixedArs: DEFAULTS.tasaFixedArs,
+          tasaAmountArs: context.totals.tasaAmountArs,
+          totalAmountArs: context.totals.totalAmountArs,
+          sellerPayoutArs: context.totals.sellerPayoutArs,
+          listingTitleSnapshot: context.listing.title,
+          listingPhotoUrlSnapshot: context.listingPhotoUrl,
+        },
+        { transaction }
+      );
+
+      if (context.coupon) {
+        await reserveCoupon(context.coupon, created.id, context.couponAmountArs, transaction);
+      }
+
+      return created;
     });
   } catch (error) {
     if (error instanceof Error && error.name === 'SequelizeUniqueConstraintError') {
@@ -447,7 +489,7 @@ export async function listSales(userId: string): Promise<OrderView[]> {
   return orders.map((order) => toOrderView(order, userId));
 }
 
-async function verifySellerFirstSale(
+export async function verifySellerFirstSale(
   sellerId: string,
   orderId: string,
   transaction: Transaction
@@ -711,6 +753,7 @@ export async function cancelOrder(userId: string, orderId: string): Promise<Orde
   }
 
   await order.update({ status: 'cancelled', cancelledAt: new Date() });
+  await releaseCouponForOrder(order.id);
   await addEvent(order.id, 'order_cancelled', userId, {});
   await createNotification({
     userId: order.buyerId === userId ? order.sellerId : order.buyerId,

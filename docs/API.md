@@ -264,33 +264,88 @@ Reglas:
 - El comprobante se genera como archivo de texto cuando el payout está pagado.
 - SLA: 48-72 horas hábiles desde `completed`.
 
-## 10. Disputas
+## 10. Disputas, reembolsos y cupones
 
-| Método | Ruta                          | Auth           | Descripción                                         |
-| ------ | ----------------------------- | -------------- | --------------------------------------------------- |
-| POST   | `/orders/:id/dispute`         | comprador      | Abre disputa (`not_received` o `not_as_described`). |
-| GET    | `/disputes/:id`               | partes/soporte | Detalle y timeline.                                 |
-| POST   | `/disputes/:id/messages`      | partes/soporte | Mensajes.                                           |
-| POST   | `/disputes/:id/evidence`      | partes         | Fotos/videos.                                       |
-| POST   | `/disputes/:id/offer`         | vendedor       | Reembolso parcial o cubrir retorno.                 |
-| POST   | `/admin/disputes/:id/resolve` | support/admin  | `refund_money`, `refund_coupon`, `reject`.          |
+### Disputas
+
+| Método | Ruta                          | Auth           | Descripción                                     |
+| ------ | ----------------------------- | -------------- | ----------------------------------------------- |
+| POST   | `/orders/:id/dispute`         | comprador      | Abre disputa dentro de 48 h desde `delivered`.  |
+| GET    | `/disputes`                   | partes         | Disputas del comprador o vendedor.              |
+| GET    | `/disputes/:id`               | partes/support | Detalle, evidencia, mensajes y timeline.        |
+| POST   | `/disputes/:id/messages`      | partes/support | Envía un mensaje (`body`).                      |
+| POST   | `/disputes/:id/evidence`      | partes         | Agrega evidencia (`kind`, `url` o `body`).      |
+| POST   | `/disputes/:id/offer`         | vendedor       | Reembolso parcial o cubrir envío de devolución. |
+| GET    | `/admin/disputes?status=`     | support/admin  | Cola de disputas.                               |
+| POST   | `/admin/disputes/:id/resolve` | support/admin  | `refund_money`, `refund_coupon` o `reject`.     |
+
+Body de apertura:
+
+```json
+{
+  "reason": "not_received | not_as_described",
+  "description": "texto de 20 a 2000 caracteres"
+}
+```
+
+Body de resolución:
+
+```json
+{
+  "resolution": "refund_money | refund_coupon | reject",
+  "notes": "opcional",
+  "amountArs": 10000
+}
+```
+
+`amountArs` solo aplica a `refund_money` y permite reembolso parcial. Si se omite, es total.
 
 Estados: `open`, `under_review`, `resolved_refund`, `resolved_coupon`, `resolved_rejected`, `cancelled`.
 
 Reglas:
 
 - Solo dentro de 48 h desde `delivered`.
-- Congela el payout.
+- La orden pasa a `disputed` y el payout queda bloqueado.
 - SLA de resolución: 72 h.
-- Reembolso de dinero incluye Tasa; cupón no.
+- Reembolso de dinero incluye la Tasa; cupón no.
+- Reembolso Talo `FULL`/`PARTIAL` idempotente; no se crea otro si hay uno `PENDING`.
+- La orden reembolsada pasa a `refunded` y el payout se anula.
+
+### Cupones
+
+| Método | Ruta                 | Auth    | Descripción                    |
+| ------ | -------------------- | ------- | ------------------------------ |
+| GET    | `/me/coupons`        | usuario | Historial de cupones.          |
+| GET    | `/me/coupons/active` | usuario | Cupones disponibles para usar. |
+
+Reglas:
+
+- Se emiten al resolver una disputa con `refund_coupon`.
+- Cubren el valor del artículo, sin Tasa ni punto medio.
+- Vencen a los 90 días, un solo uso.
+- No se combinan con ofertas.
+- Se reservan al crear la orden y se liberan si la orden se cancela o vence.
 
 ## 11. Reseñas
 
-| Método | Ruta                  | Auth    | Descripción                          |
-| ------ | --------------------- | ------- | ------------------------------------ |
-| POST   | `/orders/:id/reviews` | partes  | 1–5 + comentario, dentro de 30 días. |
-| GET    | `/users/:id/reviews`  | público | Reseñas y promedio.                  |
-| POST   | `/reviews/:id/report` | usuario | Denunciar.                           |
+| Método | Ruta                                 | Auth          | Descripción                                     |
+| ------ | ------------------------------------ | ------------- | ----------------------------------------------- |
+| POST   | `/orders/:id/reviews`                | partes        | Reseña 1-5 + comentario, dentro de 30 días.     |
+| GET    | `/orders/:id/reviews`                | partes        | Reseñas de la orden, `canReview` y vencimiento. |
+| GET    | `/users/:id/reviews`                 | público       | Reseñas visibles y promedio.                    |
+| POST   | `/reviews/:id/report`                | usuario       | Denuncia una reseña.                            |
+| GET    | `/admin/reviews/reports?status=`     | support/admin | Denuncias de reseñas.                           |
+| POST   | `/admin/reviews/reports/:id/resolve` | support/admin | `resolved` o `dismissed`.                       |
+| POST   | `/admin/reviews/:id/hide`            | support/admin | Oculta una reseña.                              |
+| POST   | `/admin/reviews/:id/show`            | support/admin | Vuelve a mostrar una reseña.                    |
+
+Reglas:
+
+- Solo se reseña una orden `completed` (o `payout_pending`/`paid_out`).
+- Bidireccional: comprador y vendedor.
+- Una reseña por orden y autor.
+- Ventana de 30 días desde `completed`.
+- Las reseñas ocultas no aparecen en el perfil público.
 
 ## 12. Conversaciones y mensajes
 

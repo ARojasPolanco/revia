@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/components/AuthProvider';
+import { useDialog } from '@/components/DialogProvider';
+import { AdminTabs, PageHeader } from '@/components/PageHeader';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { ApiError, apiFetch } from '@/lib/api';
 import { formatArs, listingCover, type Listing } from '@/lib/listings';
@@ -18,6 +20,7 @@ interface Report {
 
 function ModerationContent() {
   const { user } = useAuth();
+  const { prompt } = useDialog();
   const [listings, setListings] = useState<Listing[]>([]);
   const [reports, setReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
@@ -68,16 +71,23 @@ function ModerationContent() {
   }
 
   async function reject(listingId: string) {
-    const reason = window.prompt('Motivo del rechazo (visible para el vendedor):');
+    const reason = await prompt({
+      title: 'Rechazar publicación',
+      message: 'El motivo será visible para el vendedor. Sé claro y respetuoso.',
+      label: 'Motivo del rechazo',
+      multiline: true,
+      placeholder: 'Ejemplo: las fotos no muestran el artículo completo.',
+      confirmLabel: 'Rechazar',
+    });
 
-    if (!reason) {
+    if (!reason?.trim()) {
       return;
     }
 
     await runAction(listingId, () =>
       apiFetch(`/admin/listings/${listingId}/reject`, {
         method: 'POST',
-        body: JSON.stringify({ reason }),
+        body: JSON.stringify({ reason: reason.trim() }),
       })
     );
   }
@@ -98,26 +108,11 @@ function ModerationContent() {
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-4xl flex-col gap-6 px-5 py-12">
-      <header className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-black tracking-tight text-neutral-900">
-            Moderación de publicaciones
-          </h1>
-          <p className="text-sm text-neutral-600">
-            Aprobá o rechazá publicaciones pendientes y revisá denuncias.
-          </p>
-        </div>
-        <div className="flex gap-3">
-          {user?.role === 'admin' ? (
-            <Link className="text-sm font-semibold text-teal-700" href="/admin/finanzas">
-              Finanzas
-            </Link>
-          ) : null}
-          <Link className="text-sm font-semibold text-teal-700" href="/">
-            Inicio
-          </Link>
-        </div>
-      </header>
+      <PageHeader
+        description="Aprobá o rechazá publicaciones pendientes y revisá denuncias."
+        title="Moderación de publicaciones"
+      />
+      <AdminTabs current="/admin/publicaciones" role={user?.role} />
 
       {loading ? <p className="text-sm text-neutral-500">Cargando…</p> : null}
 

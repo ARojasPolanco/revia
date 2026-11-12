@@ -13,6 +13,8 @@ import { OrderCard } from '../OrderCard';
 const order: Order = {
   id: 'order-1',
   role: 'buyer',
+  couponId: null,
+  couponAmountArs: 0,
   status: 'pending_payment',
   deliveryMode: 'pickup_home',
   itemPriceArs: 15_000,

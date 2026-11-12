@@ -1,4 +1,5 @@
 import { logger } from '../config/logger.js';
+import { expireCoupons } from '../modules/coupons/coupons.service.js';
 import { expireOffers } from '../modules/offers/offers.service.js';
 import { completeDeliveredOrders } from '../modules/orders/orders.service.js';
 import { expirePendingPayments } from '../modules/payments/payments.service.js';
@@ -14,6 +15,7 @@ export async function runOrderJobs(): Promise<void> {
 
   try {
     await expireOffers();
+    await expireCoupons();
     await expirePendingPayments();
     const completed = await completeDeliveredOrders();
 

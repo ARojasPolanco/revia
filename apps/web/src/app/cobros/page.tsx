@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import Link from 'next/link';
+import { ActionLink, PageHeader } from '@/components/PageHeader';
 import { PayoutCard } from '@/components/PayoutCard';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { ApiError, apiFetch } from '@/lib/api';
@@ -49,32 +49,15 @@ function PayoutsContent() {
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-4xl flex-col gap-6 px-5 py-12">
-      <header className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-black tracking-tight text-neutral-900">Mis cobros</h1>
-          <p className="text-sm text-neutral-600">Seguí tus payouts y descargá los comprobantes.</p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Link
-            className="rounded-xl border border-neutral-300 px-4 py-2 text-sm font-semibold text-neutral-800"
-            href="/ventas"
-          >
-            Ventas
-          </Link>
-          <Link
-            className="rounded-xl border border-neutral-300 px-4 py-2 text-sm font-semibold text-neutral-800"
-            href="/configuracion"
-          >
+      <PageHeader
+        actions={
+          <ActionLink href="/configuracion" variant="secondary">
             Cuenta de cobro
-          </Link>
-          <Link
-            className="rounded-xl border border-neutral-300 px-4 py-2 text-sm font-semibold text-neutral-800"
-            href="/"
-          >
-            Inicio
-          </Link>
-        </div>
-      </header>
+          </ActionLink>
+        }
+        description="Seguí tus payouts y descargá los comprobantes."
+        title="Mis cobros"
+      />
 
       <section className="grid gap-3 sm:grid-cols-3">
         <article className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm">

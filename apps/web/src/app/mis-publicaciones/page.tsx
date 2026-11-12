@@ -2,11 +2,14 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useDialog } from '@/components/DialogProvider';
+import { ActionLink, PageHeader } from '@/components/PageHeader';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { ApiError, apiFetch } from '@/lib/api';
 import { STATUS_LABELS, formatArs, listingCover, type Listing } from '@/lib/listings';
 
 function MyListingsContent() {
+  const { confirm } = useDialog();
   const [listings, setListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -44,7 +47,15 @@ function MyListingsContent() {
   }
 
   async function removeListing(id: string) {
-    if (!window.confirm('¿Eliminar esta publicación?')) {
+    const confirmed = await confirm({
+      title: 'Eliminar publicación',
+      message:
+        'La publicación dejará de estar visible. Si tiene una venta en curso, primero resolvé esa operación.',
+      confirmLabel: 'Eliminar publicación',
+      tone: 'danger',
+    });
+
+    if (!confirmed) {
       return;
     }
 
@@ -53,26 +64,15 @@ function MyListingsContent() {
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-4xl flex-col gap-6 px-5 py-12">
-      <header className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-black tracking-tight text-neutral-900">Mis publicaciones</h1>
-          <p className="text-sm text-neutral-600">Gestioná tus artículos y su estado.</p>
-        </div>
-        <div className="flex gap-2">
-          <Link
-            className="rounded-xl border border-neutral-300 px-4 py-2 text-sm font-semibold text-neutral-800"
-            href="/"
-          >
-            Inicio
-          </Link>
-          <Link
-            className="rounded-xl bg-teal-700 px-4 py-2 text-sm font-semibold text-white"
-            href="/publicar"
-          >
+      <PageHeader
+        actions={
+          <ActionLink href="/publicar" variant="primary">
             Nueva publicación
-          </Link>
-        </div>
-      </header>
+          </ActionLink>
+        }
+        description="Gestioná tus artículos y su estado."
+        title="Mis publicaciones"
+      />
 
       {loading ? <p className="text-sm text-neutral-500">Cargando…</p> : null}
 

@@ -17,6 +17,7 @@ import {
   type TaloPayment,
 } from '../../config/talo.js';
 import { createNotification } from '../notifications/notifications.service.js';
+import { releaseCouponForOrder } from '../coupons/coupons.service.js';
 import { Listing } from '../listings/listing.model.js';
 import { Order } from '../orders/order.model.js';
 import { DeliveryCode } from '../orders/deliveryCode.model.js';
@@ -374,6 +375,7 @@ export async function processTaloPayment(
       } else if (taloPayment.payment_status === 'EXPIRED') {
         if (order.status === 'pending_payment') {
           await order.update({ status: 'expired' }, { transaction });
+          await releaseCouponForOrder(order.id, transaction);
           await logEvent(order.id, 'payment_expired', transaction, {}, null);
           orderStatus = 'expired';
           shouldNotify = 'expired';
@@ -484,6 +486,7 @@ async function markPaymentExpired(payment: Payment): Promise<void> {
 
     if (order.status === 'pending_payment') {
       await order.update({ status: 'expired' }, { transaction });
+      await releaseCouponForOrder(order.id, transaction);
       await logEvent(order.id, 'payment_expired', transaction, {}, null);
       expired = true;
     }

@@ -1,6 +1,11 @@
 import { Category } from '../modules/categories/category.model.js';
 import { CategoryAttribute } from '../modules/categories/categoryAttribute.model.js';
 import { Conversation } from '../modules/chat/conversation.model.js';
+import { Coupon } from '../modules/coupons/coupon.model.js';
+import { CouponRedemption } from '../modules/coupons/couponRedemption.model.js';
+import { Dispute } from '../modules/disputes/dispute.model.js';
+import { DisputeEvent } from '../modules/disputes/disputeEvent.model.js';
+import { DisputeEvidence } from '../modules/disputes/disputeEvidence.model.js';
 import { Message } from '../modules/chat/message.model.js';
 import { Listing } from '../modules/listings/listing.model.js';
 import { ListingPhoto } from '../modules/listings/listingPhoto.model.js';
@@ -16,6 +21,8 @@ import { Refund } from '../modules/payments/refund.model.js';
 import { Payout } from '../modules/payouts/payout.model.js';
 import { PayoutAccount } from '../modules/payouts/payoutAccount.model.js';
 import { PayoutEvent } from '../modules/payouts/payoutEvent.model.js';
+import { Review } from '../modules/reviews/review.model.js';
+import { ReviewReport } from '../modules/reviews/reviewReport.model.js';
 import { User } from '../modules/users/user.model.js';
 import { UserBlock } from '../modules/users/userBlock.model.js';
 import { UserReport } from '../modules/users/userReport.model.js';
@@ -103,6 +110,36 @@ export function setupAssociations(): void {
   Payout.hasMany(PayoutEvent, { foreignKey: 'payoutId', as: 'events' });
   PayoutEvent.belongsTo(Payout, { foreignKey: 'payoutId', as: 'payout' });
   PayoutEvent.belongsTo(User, { foreignKey: 'actorId', as: 'actor' });
+
+  Order.belongsTo(Coupon, { foreignKey: 'couponId', as: 'coupon' });
+  Coupon.hasMany(Order, { foreignKey: 'couponId', as: 'orders' });
+  Coupon.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+  User.hasMany(Coupon, { foreignKey: 'userId', as: 'coupons' });
+  Coupon.hasOne(CouponRedemption, { foreignKey: 'couponId', as: 'redemption' });
+  CouponRedemption.belongsTo(Coupon, { foreignKey: 'couponId', as: 'coupon' });
+  CouponRedemption.belongsTo(Order, { foreignKey: 'orderId', as: 'order' });
+
+  Order.hasOne(Dispute, { foreignKey: 'orderId', as: 'dispute' });
+  Dispute.belongsTo(Order, { foreignKey: 'orderId', as: 'order' });
+  Dispute.belongsTo(User, { foreignKey: 'buyerId', as: 'buyer' });
+  Dispute.belongsTo(User, { foreignKey: 'sellerId', as: 'seller' });
+  Dispute.belongsTo(User, { foreignKey: 'resolvedBy', as: 'resolver' });
+  Dispute.hasMany(DisputeEvent, { foreignKey: 'disputeId', as: 'events' });
+  DisputeEvent.belongsTo(Dispute, { foreignKey: 'disputeId', as: 'dispute' });
+  DisputeEvent.belongsTo(User, { foreignKey: 'actorId', as: 'actor' });
+  Dispute.hasMany(DisputeEvidence, { foreignKey: 'disputeId', as: 'evidence' });
+  DisputeEvidence.belongsTo(Dispute, { foreignKey: 'disputeId', as: 'dispute' });
+  DisputeEvidence.belongsTo(User, { foreignKey: 'uploaderId', as: 'uploader' });
+  Coupon.belongsTo(Dispute, { foreignKey: 'sourceDisputeId', as: 'sourceDispute' });
+  Dispute.hasOne(Coupon, { foreignKey: 'sourceDisputeId', as: 'coupon' });
+
+  Order.hasMany(Review, { foreignKey: 'orderId', as: 'reviews' });
+  Review.belongsTo(Order, { foreignKey: 'orderId', as: 'order' });
+  Review.belongsTo(User, { foreignKey: 'authorId', as: 'author' });
+  Review.belongsTo(User, { foreignKey: 'targetId', as: 'target' });
+  Review.hasMany(ReviewReport, { foreignKey: 'reviewId', as: 'reports' });
+  ReviewReport.belongsTo(Review, { foreignKey: 'reviewId', as: 'review' });
+  ReviewReport.belongsTo(User, { foreignKey: 'reporterId', as: 'reporter' });
 }
 
 setupAssociations();

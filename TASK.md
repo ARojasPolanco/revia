@@ -4,13 +4,38 @@ Tablero vivo del proyecto. Se actualiza al empezar y al terminar cada tarea. Si 
 
 ## Estado actual
 
-- **Fase:** Fase 7 completada en local (payouts manuales, finanzas y conciliación).
-- **Repo:** `REVIA-fullstack`, rama `dev`, con Fase 0 en `main` y Fases 1-7 en `dev`.
+- **Fase:** Fase 8 completada en local (disputas, reembolsos, cupones y reseñas). La siguiente es la Fase 9 (PWA, push y emails).
+- **Repo:** `REVIA-fullstack`, rama `dev`, con Fase 0 en `main` y Fases 1-8 en `dev`.
 - **Alcance:** MVP C2C local en Bahía Blanca, ARS, Tasa de REVIA 7% + $500, custodia y payouts manuales.
 - **Documentos creados:** `AGENTS.md`, `TASK.md`, `docs/SPEC.md`, `docs/ARCHITECTURE.md`, `docs/API.md`, `docs/DECISIONS.md`, `README.md`.
 - **Decisiones abiertas:** ninguna. D-026 a D-036 cerradas.
 - **Riesgo principal:** operación manual de payouts y dependencia de Talo (solo transferencia).
 - **Última actualización:** 2026-11-10.
+
+## Ajustes visuales en curso (2026-11-10)
+
+- Header global con navegación desktop y menú lateral mobile abierto desde la derecha, con controles de 44 px.
+- Home diferenciado: visitante, comprador, vendedor verificado y equipo REVIA; `Ingresar` se oculta al detectar sesión.
+- Header simplificado: logo, buscador, ingreso/cuenta, Vender ahora y ayuda; la navegación secundaria vive en el menú de cuenta.
+- Con sesión iniciada se priorizan chat y notificaciones con íconos; el acceso a cuenta usa engranaje de ajustes y no muestra el email.
+- Header por rol: vendedor con `Publicar` y `Mis publicaciones` visibles; comprador con chat, notificaciones y menú de compras.
+- Para vendedores, la barra de categorías solo se muestra en el home y desaparece al entrar a sus secciones.
+- Comprador: "Empezar a vender" lleva a verificación de identidad; el home ya no muestra el aviso permanente de KYC.
+- Home con scroll infinito sobre `/listings` paginado, deduplicación, spinner de carga inicial y de siguientes páginas, y reintento ante error.
+- Categorías globales bajo el header: mega-menú al hover en desktop (íconos + subcategorías) y pills directas en mobile.
+- Home limpio: sin CTAs duplicados ni grilla de categorías en el cuerpo; foco en feed de publicaciones.
+- El catálogo lee `q`, `categoryId`, `condition`, precios y orden desde la URL para que buscador y categorías lleguen filtrados.
+- Botoneras estandarizadas con `PageHeader`, `ActionLink`, `ActionButton` y `AdminTabs`; se quitaron accesos duplicados en páginas internas.
+- Modales propios sobre Radix UI Dialog (foco atrapado/restaurado, Escape, ARIA y scroll lock); se eliminaron `alert`, `confirm` y `prompt` nativos.
+- Confirmaciones rediseñadas con ícono contextual, footer responsive y acciones primaria/secundaria más claras.
+- Confirmaciones explícitas en eliminar, bloquear, reportar, cancelar, pagar, resolver y cerrar sesión.
+- Logout disponible en mobile y desktop (menú de cuenta), con confirmación; cookie borrada y `/auth/me` devuelve 401.
+- Login (contraseña y Google) vuelve a la ruta protegida original mediante `next`; sesión vencida redirige una sola vez a `/ingresar?expired=1`.
+- Onboarding incompleto redirige a `/completar-perfil` conservando el destino; home muestra avisos de email, identidad y perfil pendientes.
+- Flujo de compra: login vuelve a la publicación, compra bloqueada con guía si falta email/perfil, confirmación previa y próximo paso visible en compras/ventas.
+- Placeholders de `Quiénes somos`, `FAQ`, `Términos`, `Privacidad` y `Cookies`.
+- Controles de overflow horizontal y estilos base para botones oscuros.
+- Pendiente: revisión visual manual en mobile/desktop y definición de la paleta final.
 
 ## Leyenda
 
@@ -317,17 +342,28 @@ Tablero vivo del proyecto. Se actualiza al empezar y al terminar cada tarea. Si 
 
 **Objetivo:** resolver problemas y construir reputación.
 
-- [ ] Modelos `Dispute`, `DisputeEvent`, `DisputeEvidence`, `Review`, `Coupon`, `CouponRedemption`.
-- [ ] Apertura de disputa dentro de 48 h.
-- [ ] Congelamiento de payout y SLA 72 h.
-- [ ] Evidencia, mensajes y resolución (`refund_money`, `refund_coupon`, `reject`).
-- [ ] Reembolso Talo `FULL`/`PARTIAL` e idempotencia.
-- [ ] Cupón por valor del artículo, 90 días, un uso, sin combinar con ofertas.
-- [ ] Reseñas bidireccionales con ventana de 30 días.
-- [ ] UI de disputas, reembolsos y reseñas.
-- [ ] Tests de disputas, cupones, reembolsos y reseñas.
+- [x] Modelos `Dispute`, `DisputeEvent`, `DisputeEvidence`, `Review`, `Coupon`, `CouponRedemption`.
+- [x] Apertura de disputa dentro de 48 h.
+- [x] Congelamiento de payout y SLA 72 h.
+- [x] Evidencia, mensajes y resolución (`refund_money`, `refund_coupon`, `reject`).
+- [x] Reembolso Talo `FULL`/`PARTIAL` e idempotencia.
+- [x] Cupón por valor del artículo, 90 días, un uso, sin combinar con ofertas.
+- [x] Reseñas bidireccionales con ventana de 30 días.
+- [x] UI de disputas, reembolsos y reseñas.
+- [x] Tests de disputas, cupones, reembolsos y reseñas.
 
 **DoD:** disputa resuelta con reembolso o cupón; reseñas visibles y moderables.
+
+## Avance Fase 8 (2026-11-10)
+
+- Migración `010_disputes_coupons_reviews`: disputas, eventos, evidencia, cupones, redenciones y reseñas.
+- Disputa desde `delivered` dentro de 48 h, con bloqueo de payout y SLA de 72 h.
+- Mensajes, evidencia por enlace/texto, oferta del vendedor y resolución por soporte/admin.
+- Reembolsos Talo `FULL`/`PARTIAL` idempotentes; orden `refunded` y payout anulado.
+- Cupones por valor del artículo, 90 días, un uso, sin ofertas y liberación al cancelar/expirar la orden.
+- Reseñas bidireccionales 1-5, ventana de 30 días, promedio público y moderación por denuncia.
+- UI: `/disputas`, `/disputas/[id]`, `/admin/disputas`, `/cupones`, `/admin/resenas` y reseñas en compras/ventas/perfil.
+- Tests: **82 API + 18 web**; build/lint verdes; migración `010` down/up verificada.
 
 ## Fase 9 — PWA, Web Push y emails transaccionales
 

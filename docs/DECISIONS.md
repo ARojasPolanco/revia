@@ -363,3 +363,43 @@ Formato: `D-XXX · fecha · estado`. Estados: `aceptada`, `revisar`, `reemplazad
 - Contexto: Talo puede perder o demorar webhooks, y finanzas necesita ver diferencias.
 - Decisión: job diario que revisa pagos de los últimos 7 días y endpoint `POST /admin/payouts/reconcile` para ejecutarlo manualmente. Las diferencias se reprocesan con la misma lógica idempotente de pagos.
 - Consecuencias: menor riesgo de pagos sin conciliar; el endpoint acota a 50 pagos por corrida para no saturar Talo.
+
+## D-046 — 2026-11-10 — aceptada
+
+**Disputa única por orden y ventana de 48 h.**
+
+- Contexto: el comprador debe reclamar solo después de recibir y dentro del plazo de protección.
+- Decisión: una orden admite una sola disputa, abierta únicamente en `delivered` y antes de `claim_window_ends_at`. La orden pasa a `disputed` y el payout se bloquea.
+- Consecuencias: evita reclamos tardíos o duplicados; una disputa rechazada completa la orden y habilita el payout.
+
+## D-047 — 2026-11-10 — aceptada
+
+**Reembolsos Talo FULL/PARTIAL con registro local.**
+
+- Contexto: finanzas debe poder devolver dinero sin exponer Talo al usuario y sin duplicar reembolsos.
+- Decisión: `refund_money` usa la API de Talo; se registra `refunds` con `provider_refund_id`, estado y monto. Solo se permite un reembolso `PENDING` por pago. La conciliación diaria actualiza el estado.
+- Consecuencias: trazabilidad y bloqueo de doble reembolso; si Talo falla, la disputa no se cierra.
+
+## D-048 — 2026-11-10 — aceptada
+
+**Cupón como crédito del artículo y no combinable con ofertas.**
+
+- Contexto: el cupón de reembolso debe servir para una compra futura sin canjearse por dinero.
+- Decisión: el cupón cubre el valor del artículo (sin Tasa ni punto medio), vence a los 90 días, se usa una vez y no se combina con ofertas. Se reserva al crear la orden y se libera si la orden se cancela o vence.
+- Consecuencias: el comprador paga Tasa y logística; el vendedor cobra igual; REVIA financia el cupón.
+
+## D-049 — 2026-11-10 — aceptada
+
+**Evidencia de disputa por enlace/texto en el MVP.**
+
+- Contexto: subir archivos de evidencia agrega storage y moderación adicionales.
+- Decisión: la API acepta `kind` (`image`, `video`, `text`, `link`), `url` y/o `body`. La UI permite pegar enlaces o describir la evidencia. La carga de archivos queda para una fase posterior.
+- Consecuencias: flujo completo sin nuevo storage; se puede migrar a uploads con R2 más adelante.
+
+## D-050 — 2026-11-10 — aceptada
+
+**Reseñas bidireccionales con moderación.**
+
+- Contexto: la reputación es parte de la confianza y debe poder moderarse.
+- Decisión: comprador y vendedor pueden reseñar una orden completada dentro de 30 días, una vez por autor. Las reseñas son públicas, tienen promedio y pueden ocultarse tras una denuncia.
+- Consecuencias: reputación visible y auditable; no hay edición de reseñas, solo ocultamiento por moderación.

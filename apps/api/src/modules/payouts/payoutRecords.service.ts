@@ -240,6 +240,14 @@ function resolveBlockReason(
     return 'dispute_open';
   }
 
+  if (order.status === 'refunded') {
+    return 'order_refunded';
+  }
+
+  if (order.status === 'cancelled' || order.status === 'expired') {
+    return 'order_cancelled';
+  }
+
   if (pendingRefund) {
     return 'refund_pending';
   }
@@ -712,6 +720,59 @@ export async function getPayoutReceipt(userId: string, payoutId: string): Promis
   ].join('\n');
 }
 
+export async function blockPayoutForOrder(
+  orderId: string,
+  reason: PayoutBlockReason,
+  actorId: string | null
+): Promise<void> {
+  const payout = await Payout.findOne({ where: { orderId } });
+
+  if (!payout || payout.status === 'paid') {
+    return;
+  }
+
+  if (payout.blockReason !== reason) {
+    await payout.update({ blockReason: reason });
+  }
+
+  await addPayoutEvent(payout.id, 'payout_blocked', actorId, { reason });
+}
+
+export async function voidPayoutForOrder(
+  orderId: string,
+  reason: string,
+  actorId: string | null
+): Promise<void> {
+  const payout = await Payout.findOne({ where: { orderId } });
+
+  if (!payout || payout.status === 'paid') {
+    return;
+  }
+
+  await payout.update({
+    status: 'failed',
+    blockReason: reason,
+    failureReason: reason,
+    failedAt: new Date(),
+    processedBy: actorId,
+  });
+  await addPayoutEvent(payout.id, 'payout_failed', actorId, {
+    reason,
+    source: 'dispute',
+  });
+}
+
+export async function refreshPayoutBlockForOrder(
+  orderId: string
+): Promise<PayoutBlockReason | null> {
+  const payout = await Payout.findOne({ where: { orderId } });
+
+  if (!payout) {
+    return null;
+  }
+
+  return refreshPayoutBlock(payout);
+}
 export async function reconcileTaloPayments(): Promise<ReconciliationResult> {
   const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
   const payments = await Payment.findAll({
@@ -733,6 +794,15 @@ export async function reconcileTaloPayments(): Promise<ReconciliationResult> {
 
     try {
       const remote = await getTaloPayment(payment.providerPaymentId);
+
+      if (remote.refunds) {
+        for (const refund of remote.refunds) {
+          await Refund.update(
+            { status: refund.refund_status },
+            { where: { providerRefundId: refund.refund_id } }
+          );
+        }
+      }
 
       if (remote.payment_status !== payment.status) {
         result.mismatches.push({

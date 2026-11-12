@@ -2,8 +2,8 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
-import Link from 'next/link';
 import { ListingCard } from '@/components/ListingCard';
+import { PageHeader } from '@/components/PageHeader';
 import { ApiError, apiFetch } from '@/lib/api';
 import { CONDITION_OPTIONS, type Category, type Listing } from '@/lib/listings';
 
@@ -41,6 +41,21 @@ export default function ListingsPage() {
     apiFetch<{ categories: Category[] }>('/categories')
       .then((data) => setCategories(data.categories))
       .catch(() => setCategories([]));
+  }, []);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const initial: Filters = {
+      q: params.get('q') ?? '',
+      categoryId: params.get('categoryId') ?? '',
+      condition: params.get('condition') ?? '',
+      minPrice: params.get('minPrice') ?? '',
+      maxPrice: params.get('maxPrice') ?? '',
+      sort: params.get('sort') ?? 'recent',
+    };
+
+    setDraft(initial);
+    setApplied(initial);
   }, []);
 
   const load = useCallback(async (filters: Filters) => {
@@ -85,26 +100,7 @@ export default function ListingsPage() {
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-5xl flex-col gap-6 px-5 py-12">
-      <header className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-black tracking-tight text-neutral-900">Publicaciones</h1>
-          <p className="text-sm text-neutral-600">Artículos de segunda mano en Bahía Blanca.</p>
-        </div>
-        <div className="flex gap-2">
-          <Link
-            className="rounded-xl border border-neutral-300 px-4 py-2 text-sm font-semibold text-neutral-800"
-            href="/favoritos"
-          >
-            Favoritos
-          </Link>
-          <Link
-            className="rounded-xl bg-teal-700 px-4 py-2 text-sm font-semibold text-white"
-            href="/publicar"
-          >
-            Publicar
-          </Link>
-        </div>
-      </header>
+      <PageHeader description="Artículos de segunda mano en Bahía Blanca." title="Publicaciones" />
 
       <form
         className="grid gap-3 rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm sm:grid-cols-2 lg:grid-cols-3"

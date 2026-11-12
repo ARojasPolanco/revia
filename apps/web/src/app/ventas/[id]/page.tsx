@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { DeliveryCodeForm } from '@/components/DeliveryCodeForm';
+import { OrderReviews } from '@/components/OrderReviews';
 import { OrderTimeline } from '@/components/OrderTimeline';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { ApiError, apiFetch } from '@/lib/api';
@@ -106,14 +107,9 @@ function SaleDetailContent() {
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-3xl flex-col gap-5 px-5 py-12">
-      <header className="flex flex-wrap items-center justify-between gap-3">
-        <Link className="text-sm font-semibold text-teal-700" href="/ventas">
-          Volver a mis ventas
-        </Link>
-        <Link className="text-sm font-semibold text-teal-700" href="/">
-          Inicio
-        </Link>
-      </header>
+      <Link className="text-sm font-semibold text-teal-700" href="/ventas">
+        ← Volver a mis ventas
+      </Link>
 
       <section className="flex flex-col gap-4 rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
         <div className="flex flex-wrap items-start justify-between gap-3">
@@ -240,6 +236,8 @@ function SaleDetailContent() {
               : 'La venta fue cancelada.'}
         </p>
       ) : null}
+
+      <OrderReviews orderId={order.id} />
 
       <OrderTimeline events={order.events} />
     </main>

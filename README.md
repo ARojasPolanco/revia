@@ -6,7 +6,7 @@ El dinero queda en custodia de REVIA hasta que el comprador confirma la entrega 
 
 ## Estado
 
-Fases 0-7 implementadas en local: auth, KYC, publicaciones, descubrimiento, ofertas/chat, órdenes con Talo Sandbox y payouts manuales. Ver `TASK.md`.
+Fases 0-8 implementadas en local: auth, KYC, publicaciones, descubrimiento, ofertas/chat, órdenes con Talo Sandbox, payouts manuales, disputas, cupones y reseñas. Ver `TASK.md`.
 
 ## Stack
 

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
+import { ActionButton, PageHeader } from '@/components/PageHeader';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { ApiError, apiFetch } from '@/lib/api';
 import type { NotificationItem } from '@/lib/notifications';
@@ -26,6 +27,15 @@ function notificationHref(notification: NotificationItem): string {
 
   if (notification.type.startsWith('payout_')) {
     return '/cobros';
+  }
+
+  if (notification.type.startsWith('dispute_')) {
+    const disputeId = notification.data.disputeId;
+    return typeof disputeId === 'string' ? `/disputas/${disputeId}` : '/disputas';
+  }
+
+  if (notification.type === 'review_received' && typeof orderId === 'string') {
+    return role === 'seller' ? `/ventas/${orderId}` : `/compras/${orderId}`;
   }
 
   if (
@@ -98,28 +108,19 @@ function NotificationsContent() {
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-2xl flex-col gap-6 px-5 py-12">
-      <header className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-black tracking-tight text-neutral-900">Notificaciones</h1>
-          <p className="text-sm text-neutral-600">{unreadCount} sin leer.</p>
-        </div>
-        <div className="flex gap-2">
-          <Link
-            className="rounded-xl border border-neutral-300 px-4 py-2 text-sm font-semibold text-neutral-800"
-            href="/"
-          >
-            Inicio
-          </Link>
-          <button
-            className="rounded-xl bg-teal-700 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
-            type="button"
+      <PageHeader
+        actions={
+          <ActionButton
             onClick={markAllRead}
             disabled={busy || unreadCount === 0}
+            variant="primary"
           >
             Marcar todas
-          </button>
-        </div>
-      </header>
+          </ActionButton>
+        }
+        description={`${unreadCount} sin leer.`}
+        title="Notificaciones"
+      />
 
       {loading ? <p className="text-sm text-neutral-500">Cargando notificaciones…</p> : null}
 

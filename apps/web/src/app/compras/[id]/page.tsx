@@ -2,7 +2,9 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
+import { useDialog } from '@/components/DialogProvider';
+import { OrderReviews } from '@/components/OrderReviews';
 import { OrderTimeline } from '@/components/OrderTimeline';
 import { PaymentInstructions } from '@/components/PaymentInstructions';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
@@ -12,12 +14,19 @@ import { formatDateTime, formatRemaining, orderStatusLabel, type Order } from '@
 
 function PurchaseDetailContent() {
   const params = useParams<{ id: string }>();
+  const router = useRouter();
   const orderId = typeof params.id === 'string' ? params.id : '';
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
+  const [disputeOpen, setDisputeOpen] = useState(false);
+  const [disputeReason, setDisputeReason] = useState('not_as_described');
+  const [disputeDescription, setDisputeDescription] = useState('');
+  const [disputeBusy, setDisputeBusy] = useState(false);
+  const [disputeError, setDisputeError] = useState<string | null>(null);
+  const { confirm } = useDialog();
 
   const load = useCallback(async () => {
     if (!orderId) {
@@ -65,6 +74,76 @@ function PurchaseDetailContent() {
     } finally {
       setBusy(null);
     }
+  }
+
+  async function openOrderDispute() {
+    if (!order) {
+      return;
+    }
+
+    setDisputeBusy(true);
+    setDisputeError(null);
+
+    try {
+      const data = await apiFetch<{ dispute: { id: string } }>(`/orders/${order.id}/dispute`, {
+        method: 'POST',
+        body: JSON.stringify({
+          reason: disputeReason,
+          description: disputeDescription,
+        }),
+      });
+      router.push(`/disputas/${data.dispute.id}`);
+    } catch (caught) {
+      setDisputeError(caught instanceof ApiError ? caught.message : 'No se pudo abrir la disputa.');
+    } finally {
+      setDisputeBusy(false);
+    }
+  }
+
+  async function cancelPurchase() {
+    if (!order) {
+      return;
+    }
+
+    const confirmed = await confirm({
+      title: 'Cancelar compra',
+      message: 'La compra se cancelará si todavía no fue pagada. Esta acción no se puede deshacer.',
+      confirmLabel: 'Cancelar compra',
+      tone: 'danger',
+    });
+
+    if (!confirmed) {
+      return;
+    }
+
+    await runAction(
+      'cancel',
+      () => apiFetch(`/me/orders/${order.id}`, { method: 'DELETE' }),
+      'Compra cancelada.'
+    );
+  }
+
+  async function confirmReceipt() {
+    if (!order) {
+      return;
+    }
+
+    const confirmed = await confirm({
+      title: 'Confirmar recepción',
+      message:
+        'Confirmá solo si recibiste el artículo en las condiciones acordadas. La compra se completará y se habilitará el payout.',
+      confirmLabel: 'Sí, recibí el artículo',
+    });
+
+    if (!confirmed) {
+      return;
+    }
+
+    await runAction(
+      'confirm',
+      () => apiFetch(`/me/orders/${order.id}/confirm-receipt`, { method: 'POST' }),
+      'Recepción confirmada. Compra completada.'
+    );
   }
 
   async function copyCode(code: string) {
@@ -115,14 +194,9 @@ function PurchaseDetailContent() {
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-3xl flex-col gap-5 px-5 py-12">
-      <header className="flex flex-wrap items-center justify-between gap-3">
-        <Link className="text-sm font-semibold text-teal-700" href="/compras">
-          Volver a mis compras
-        </Link>
-        <Link className="text-sm font-semibold text-teal-700" href="/">
-          Inicio
-        </Link>
-      </header>
+      <Link className="text-sm font-semibold text-teal-700" href="/compras">
+        ← Volver a mis compras
+      </Link>
 
       <section className="flex flex-col gap-4 rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
         <div className="flex flex-wrap items-start justify-between gap-3">
@@ -166,6 +240,12 @@ function PurchaseDetailContent() {
             </dt>
             <dd className="font-medium text-neutral-900">{formatArs(order.tasaAmountArs)}</dd>
           </div>
+          {order.couponAmountArs > 0 ? (
+            <div className="flex justify-between gap-4 text-teal-800">
+              <dt>Cupón aplicado</dt>
+              <dd className="font-medium">-{formatArs(order.couponAmountArs)}</dd>
+            </div>
+          ) : null}
           <div className="flex justify-between gap-4 border-t border-neutral-200 pt-2 text-base">
             <dt className="font-bold text-neutral-900">Total</dt>
             <dd className="font-black text-neutral-900">{formatArs(order.totalAmountArs)}</dd>
@@ -227,13 +307,7 @@ function PurchaseDetailContent() {
                 className="rounded-xl border border-red-200 px-4 py-2 text-sm font-semibold text-red-700 disabled:opacity-60"
                 type="button"
                 disabled={busy !== null}
-                onClick={() =>
-                  void runAction(
-                    'cancel',
-                    () => apiFetch(`/me/orders/${order.id}`, { method: 'DELETE' }),
-                    'Compra cancelada.'
-                  )
-                }
+                onClick={() => void cancelPurchase()}
               >
                 Cancelar compra
               </button>
@@ -320,19 +394,86 @@ function PurchaseDetailContent() {
                 className="rounded-xl bg-teal-700 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
                 type="button"
                 disabled={busy !== null}
-                onClick={() =>
-                  void runAction(
-                    'confirm',
-                    () => apiFetch(`/me/orders/${order.id}/confirm-receipt`, { method: 'POST' }),
-                    'Recepción confirmada. Compra completada.'
-                  )
-                }
+                onClick={() => void confirmReceipt()}
               >
                 {busy === 'confirm' ? 'Confirmando.' : 'Confirmé la recepción'}
               </button>
             ) : null}
           </div>
         </section>
+      ) : null}
+
+      {order.status === 'delivered' ? (
+        <section className="flex flex-col gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-5">
+          <div>
+            <h2 className="text-sm font-bold text-amber-950">¿Algo no salió bien?</h2>
+            <p className="mt-1 text-xs text-amber-900">
+              Podés abrir una disputa dentro de las 48 horas desde la entrega.
+            </p>
+          </div>
+
+          {disputeOpen ? (
+            <div className="flex flex-col gap-2">
+              <select
+                className="rounded-xl border border-amber-300 bg-white px-3 py-2 text-sm"
+                value={disputeReason}
+                onChange={(event) => setDisputeReason(event.target.value)}
+              >
+                <option value="not_as_described">El artículo no coincide con la descripción</option>
+                <option value="not_received">No recibí el artículo</option>
+              </select>
+              <textarea
+                className="min-h-24 rounded-xl border border-amber-300 bg-white px-3 py-2 text-sm outline-none focus:border-teal-600"
+                minLength={20}
+                maxLength={2000}
+                placeholder="Contanos qué pasó con el mayor detalle posible."
+                value={disputeDescription}
+                onChange={(event) => setDisputeDescription(event.target.value)}
+              />
+              <div className="flex flex-wrap gap-2">
+                <button
+                  className="rounded-xl bg-red-700 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
+                  type="button"
+                  onClick={() => void openOrderDispute()}
+                  disabled={disputeBusy || disputeDescription.trim().length < 20}
+                >
+                  {disputeBusy ? 'Abriendo.' : 'Confirmar disputa'}
+                </button>
+                <button
+                  className="rounded-xl border border-neutral-300 px-4 py-2 text-sm font-semibold text-neutral-800"
+                  type="button"
+                  onClick={() => setDisputeOpen(false)}
+                >
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button
+              className="w-fit rounded-xl border border-red-200 px-4 py-2 text-sm font-semibold text-red-700"
+              type="button"
+              onClick={() => setDisputeOpen(true)}
+            >
+              Abrir disputa
+            </button>
+          )}
+
+          {disputeError ? (
+            <p className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
+              {disputeError}
+            </p>
+          ) : null}
+        </section>
+      ) : null}
+
+      {order.status === 'disputed' ? (
+        <p className="rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-900">
+          La compra está en disputa. Seguí el caso desde{' '}
+          <Link className="font-semibold underline" href="/disputas">
+            Mis disputas
+          </Link>
+          .
+        </p>
       ) : null}
 
       {order.status === 'completed' ? (
@@ -351,6 +492,8 @@ function PurchaseDetailContent() {
               : 'La compra fue cancelada.'}
         </p>
       ) : null}
+
+      <OrderReviews orderId={order.id} />
 
       <OrderTimeline events={order.events} />
     </main>
